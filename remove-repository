@@ -49,6 +49,11 @@ esac
 
 set -ex
 
+if [ -f /etc/krb5.keytab ]; then
+    export KRB5CCNAME=FILE:/tmp/krb5cc_root_hastratum1
+    kinit -k host/$THISHOST
+fi
+
 ssh $OTHERHOST rm -f $SRV/$REPO
 rm -f $SRV/$REPO
 ssh $OTHERHOST rm -rf /var/spool/cvmfs/$REPO
