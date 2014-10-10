@@ -4,7 +4,7 @@ Version: 1.0
 Release: 1
 Group: Applications/System
 License: BSD
-Source: cvmfs-hastratum1-%{version}.tgz
+Source: http://frontier.cern.ch/dist/cvmfs-hastratum1-%{version}.tgz
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
@@ -33,5 +33,5 @@ make PREFIX=%{buildroot} install
 /etc/logrotate.d/*
 
 %changelog
-* Thu Oct  9 2014 Dave Dykstra <dwd@fnal.gov> 1.0-1
+* Thu Oct 10 2014 Dave Dykstra <dwd@fnal.gov> 1.0-1
 - Initial release
