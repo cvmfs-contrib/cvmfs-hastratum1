@@ -1,0 +1,187 @@
+#!/bin/bash
+# Pull every CVMFS repository from its original source to a staging area,
+#  then push each repository to a backup machine's staging area, and
+#  finally make them available to be served to cvmfs clients, both on
+#  this machine and on the backup one.  The pushing starts happening
+#  for each repository in a separate process while pulling the next
+#  repository.
+# The data directory is shared between the staging and served areas, but
+#  it doesn't hurt for extra data files to be available.
+# If /etc/cvmfs/runstandalone does not exist and any errors happen when
+#  updating the backup machine, updates are not made available to clients
+#  from either machine.  In that way they stay in sync.
+# If /etc/cvmfs/runstandalone exists, this still attempts to push most
+#  of the files to the backup machine, but the updates will only show up
+#  on the local machine.  Care must be taken to not allow the backup
+#  machine to become the master before runstandalone is removed and the
+#  backup is caught up to date.
+# Repositories are assumed to be created by add-repository.  
+# Ssh must have permission to run between the master and backup machines
+#  as root without a password.  If using kerberos then put
+#     host/other.host@DOMAIN.NAME
+#  in ~root/.k5login on each machine where other.host is the full name
+#  of the other host and DOMAIN.NAME is your kerberos domain name.
+# Output goes to *-pull.log and *-push.log files in /var/log/cvmfs.
+#
+# Originally written by Dave Dykstra 29 March 2013
+# Adapted for cvmfs-server 2.1 15 July 2013
+# Adapted to use cvmfs_server snapshot instead of rsync for the main
+#   replication 4 September 2014.  Assumes apache is listening on port 8080.
+
+. /etc/cvmfs/hastratum1.conf
+
+usage()
+{
+    echo "Usage: $0 [ABORT]" >&2
+    echo " If ABORT then abort any update in process" >&2
+    exit 2
+}
+
+ABORT=false
+if [ $# = 1 ] && [ "$1" = "ABORT" ]; then
+    ABORT=true
+elif [ $# != 0 ]; then
+    usage
+fi
+
+THISHOST="`uname -n`"
+case $THISHOST in
+    $HOST1) OTHERHOST=$HOST2;;
+    $HOST2) OTHERHOST=$HOST1;;
+    *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
+esac
+
+if [ ! -d "$SRV" ]; then
+    echo "$SRV does not exist, nothing to do" >&2
+fi
+
+if [ "`id -u`" != 0 ]; then
+    echo "Not running as root" >&2
+    exit 1
+fi
+
+MAXFDS=16384
+ulimit -n $MAXFDS
+
+if [ -f /etc/krb5.keytab ]; then
+    export KRB5CCNAME=FILE:/tmp/krb5cc_root_hastratum1
+    kinit -k host/$THISHOST
+fi
+
+# base log name
+LOGBASE="${SRV##*/}"
+
+LOCKFILE=/var/run/${LOGBASE}-pullpush.lock
+TMPLOCK="$LOCKFILE.$$"
+# put in parent's process id so can abort whole process group
+echo "$PPID" >"$TMPLOCK"
+
+if [ ! -d /var/log/cvmfs ]; then
+    mkdir /var/log/cvmfs
+fi
+PULLLOG=/var/log/cvmfs/${LOGBASE}-pull.log
+PUSHLOG=/var/log/cvmfs/${LOGBASE}-push.log
+
+(
+if ! ln $TMPLOCK $LOCKFILE 2>/dev/null; then
+    OTHERPID="`cat $LOCKFILE`"
+    if [ -z "$OTHERPID" ] || ! kill -0 "$OTHERPID" 2>/dev/null; then
+	rm -f $LOCKFILE
+	if $ABORT; then
+	    echo;echo "Abort not needed at `date` because although $LOCKFILE existed the process $OTHERPID was not running"
+	    exit 1
+	fi
+	if ! ln $TMPLOCK $LOCKFILE 2>/dev/null; then
+	    echo;echo "Attempted to break lock $LOCKFILE from $OTHERPID at `date` but failed, giving up"
+	    exit 1
+	fi
+	echo;echo "Broke lock $LOCKFILE from $OTHERPID at `date` because process was not running"
+    else
+	if $ABORT; then
+	    echo;echo "Aborting update pid $OTHERPID in progress at `date`"
+	    kill -9 -"$OTHERPID"
+	    rm -f $LOCKFILE
+	    exit 1
+	fi
+	echo;echo "Cannot create $LOCKFILE at `date`, already created by running process $OTHERPID"
+	exit 1
+    fi
+fi
+if $ABORT; then
+    echo;echo "Abort not needed at `date` because update not in progress"
+    rm -f $LOCKFILE
+    exit 1
+fi
+) >>$PULLLOG 2>&1
+RET=$?
+
+rm -f $TMPLOCK
+
+if [ $RET != 0 ]; then
+    exit
+fi
+
+(
+for REPO in `cd $SRV;echo *`; do
+    #stdout here is used to coordinate with the push side, so
+    #  everything else has to be redirected to stderr
+    REPODIR=/etc/cvmfs/repositories.d/$REPO
+    if [ ! -d $REPODIR ]; then
+	echo "$REPODIR does not exist, skipping!" >&2
+	continue
+    fi
+    STOREDIR="`grep '^CVMFS_UPSTREAM_STORAGE=' $REPODIR/server.conf|cut -d, -f3`"
+    if [ -z "$STOREDIR" ]; then
+	continue
+    fi
+    if [ ! -f `cd $STOREDIR;cd $(/bin/pwd)/..;pwd`/.cvmfspublished ]; then
+	echo >&2
+	echo "Initial snapshot of $REPO is not finished, skipping" >&2
+	continue
+    fi
+    if (
+    echo
+    echo "Pulling to $STOREDIR started at `date`"
+    if ! cvmfs_server snapshot $REPO; then
+	echo "ERROR from cvmfs_server, skipping push!"
+	false
+    fi
+    ) >&2
+    then
+	# tell push to proceed on this dir
+	echo "$REPO $STOREDIR"
+    fi
+done 
+echo "Pulling finished at `date`" >&2
+) 2>>$PULLLOG | (while read REPO STOREDIR; do
+    (
+    echo
+    echo "Pushing $STOREDIR started at `date`"
+    # only data directory is copied here by rsync to make sure .cvmfs files
+    #  get copied last, in case fail-over to the backup happens in the
+    #  middle of an rsync 
+    if ssh -o ConnectTimeout=10 $OTHERHOST "ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot $REPO" || \
+		[ -f /etc/cvmfs/runstandalone ]; then
+	SERVED="`cd $STOREDIR;cd $(/bin/pwd)/..;pwd`"
+	if [ ! -d "$SERVED" ]; then
+	    echo "$SERVED" does not exist!
+	    continue
+	fi
+	RSYNCFLAGS="-aW --exclude .cvmfs_master_replica --exclude data --exclude stage"
+	if [ -f /etc/cvmfs/runstandalone ]; then
+	    echo "Copying to $SERVED on local machine only"
+	    rsync $RSYNCFLAGS $STOREDIR/ $SERVED/
+	else
+	    echo "Copying to $SERVED"
+	    if rsync -e 'ssh -o ConnectTimeout=10' $RSYNCFLAGS $STOREDIR/ $OTHERHOST:$SERVED/; then
+		rsync $RSYNCFLAGS $STOREDIR/ $SERVED/
+	    fi
+	fi
+    fi
+    echo "Pushing $STOREDIR ended at `date`"
+    ) </dev/null
+done
+echo "Pushing finished at `date`"
+) >>$PUSHLOG 2>&1
+
+rm -f $LOCKFILE

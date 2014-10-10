@@ -1,0 +1,135 @@
+#!/bin/bash
+# Add a CVMFS repository to a dual-hosted stratum 1.
+# This can be run on either host.
+# Written by Dave Dykstra 20 June 2014
+
+. /etc/cvmfs/hastratum1.conf
+
+refreshcredentials()
+{
+    # large repos can take a long time, so refresh kerberos credentials
+    #  if that is being used
+    if [ ! -f /etc/krb5.keytab ]; then return; fi 
+    export KRB5CCNAME=FILE:/tmp/krb5cc_root_hastratum1
+    kinit -k host/`uname -n`
+}
+
+usage()
+{
+    echo "Usage: add-repository fqrn http://stratum-zero-fqdn:port [sourcefqrn]" >&2
+    exit 1
+}
+
+if [ $# != 2 ] && [ $# != 3 ]; then
+    usage
+fi
+
+case "$2" in
+    http://*);;
+    *) usage;;
+esac
+
+if [ "`id -u`" != 0 ]; then
+    echo "Not running as root" >&2
+    exit 1
+fi
+
+REPO="$1"
+URL="$2"
+SOURCEREPO="$3"
+
+KEYS=""
+SHORTREPO=""
+case "$REPO" in
+    *.cern.ch)
+	SHORTREPO="${REPO%%.*}"
+	KEYS="/etc/cvmfs/keys/cern.ch.pub:/etc/cvmfs/keys/cern-it1.cern.ch.pub:/etc/cvmfs/keys/cern-it2.cern.ch.pub"
+	;;
+    *.opensciencegrid.org)
+	SHORTREPO="${REPO%%.*}"
+	;;
+esac
+
+DOMAIN="${REPO#*.}"
+if [ -z "$KEYS" ]; then
+    KEYS="/etc/cvmfs/keys/$DOMAIN.pub"
+    if [ ! -f $KEYS ]; then
+	echo "$KEYS not found, aborting" >&2
+	exit 1
+    fi
+fi
+
+THISHOST="`uname -n`"
+case $THISHOST in
+    $HOST1) OTHERHOST=$HOST2;;
+    $HOST2) OTHERHOST=$HOST1;;
+    *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
+esac
+
+if [ -d "$STORAGE/$REPO" ]; then
+    echo "$STORAGE/$REPO already exists" >&2
+    exit 1
+fi
+
+REPOSTORE=$STORAGE/$REPO
+
+set -ex
+
+refreshcredentials
+
+# this is first to allow remove-repository to run on either host even if 
+#  this command is aborted
+ssh $OTHERHOST mkdir -p $REPOSTORE
+
+mkdir -p $REPOSTORE/data $REPOSTORE/stage
+ln -s ../data $REPOSTORE/stage/data
+
+if [ -n "$SHORTREPO" ]; then
+    ln -s $REPO $STORAGE/$SHORTREPO
+    ssh $OTHERHOST ln -s $REPO $STORAGE/$SHORTREPO
+fi
+
+mkdir -p /srv/cvmfs
+ln -s $REPOSTORE/stage /srv/cvmfs/$REPO
+if [ -z "$SOURCEREPO" ]; then
+    cvmfs_server add-replica -o root $URL/cvmfs/$REPO $KEYS
+else
+    cvmfs_server add-replica -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
+fi
+rm -f /etc/httpd/conf.d/cvmfs.$REPO.conf
+if [ "$SRV" != "/srv/cvmfs" ]; then
+    mkdir -p $SRV
+    mv /srv/cvmfs/$REPO $SRV
+    sed -i "s,/srv/cvmfs/,$SRV/,g" /etc/cvmfs/repositories.d/$REPO/server.conf
+    if [ -L /var/spool/cvmfs/$REPO/tmp ]; then
+	rm -f /var/spool/cvmfs/$REPO/tmp
+	ln -s $SRV/$REPO/data/txn /var/spool/cvmfs/$REPO/tmp
+    fi
+fi
+
+rsync -a --delete $REPOSTORE/ $OTHERHOST:$REPOSTORE
+sed -i 's,^CVMFS_STRATUM0=\(.*\),CVMFS_STRATUM0=${CVMFS_SERVER_OVERRIDE:-\1},' /etc/cvmfs/repositories.d/$REPO/server.conf
+rsync -a /etc/cvmfs/repositories.d/$REPO $OTHERHOST:/etc/cvmfs/repositories.d
+rsync -a /var/spool/cvmfs/$REPO $OTHERHOST:/var/spool/cvmfs
+ssh $OTHERHOST mkdir -p $SRV
+rsync -a $SRV/$REPO $OTHERHOST:$SRV
+
+touch $REPOSTORE/stage/.cvmfs_master_replica
+ssh $OTHERHOST touch $REPOSTORE/stage/.cvmfs_master_replica
+
+cvmfs_server snapshot $REPO
+
+refreshcredentials
+
+# comment out because rsync gets better throughput
+#ssh $OTHERHOST CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot $REPO
+
+# arcfour cipher greatly reduces ssh CPU, and so increases throughput
+#  when CPU is the bottleneck
+rsync -a -e 'ssh -c arcfour' $REPOSTORE/ $OTHERHOST:$REPOSTORE
+
+refreshcredentials
+
+EXCLUDES=" --exclude .cvmfs_master_replica --exclude data --exclude stage"
+rsync -a $EXCLUDES $REPOSTORE/stage/ $REPOSTORE/
+rsync -a $EXCLUDES $REPOSTORE/stage/ $OTHERHOST:$REPOSTORE/

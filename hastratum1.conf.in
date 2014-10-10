@@ -1,0 +1,5 @@
+HOST1=HOST1NAME
+HOST2=HOST2NAME
+STORAGE=/storage/cvmfs
+# change SRV to something other than /srv/cvmfs for testing on live machines
+SRV=/srv/cvmfs

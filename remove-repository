@@ -1,0 +1,63 @@
+#!/bin/bash
+# Remove a CVMFS repository to a dual-hosted stratum 1.
+# This can be run on either host.
+# Written by Dave Dykstra 2 September 2014
+
+. /etc/cvmfs/hastratum1.conf
+
+usage()
+{
+    echo "Usage: remove-repository fqrn" >&2
+    exit 1
+}
+
+if [ $# != 1 ]; then
+    usage
+fi
+
+if [ "`id -u`" != 0 ]; then
+    echo "Not running as root" >&2
+    exit 1
+fi
+
+REPO="$1"
+
+SHORTREPO=""
+case "$REPO" in
+    *.cern.ch|*.opensciencegrid.org)
+	SHORTREPO="${REPO%%.*}"
+	;;
+esac
+
+case `uname -n` in
+    $HOST1) OTHERHOST=$HOST2;;
+    $HOST2) OTHERHOST=$HOST1;;
+    *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
+esac
+
+if [ ! -d "$STORAGE/$REPO" ]; then
+    echo "$STORAGE/$REPO does not exist" >&2
+    exit 1
+fi
+
+echo -n "Are you sure you want to remove $REPO from both machines? "
+read ANS
+case $ANS in
+    y*|Y*);;
+    *) exit 1;;
+esac
+
+set -ex
+
+ssh $OTHERHOST rm -f $SRV/$REPO
+rm -f $SRV/$REPO
+ssh $OTHERHOST rm -rf /var/spool/cvmfs/$REPO
+rm -rf /var/spool/cvmfs/$REPO
+ssh $OTHERHOST rm -rf /etc/cvmfs/repositories.d/$REPO
+rm -rf /etc/cvmfs/repositories.d/$REPO
+if [ -n "$SHORTREPO" ]; then
+    ssh $OTHERHOST rm -f $STORAGE/$SHORTREPO
+    rm -f $STORAGE/$SHORTREPO
+fi
+ssh $OTHERHOST rm -rf $STORAGE/$REPO
+rm -rf $STORAGE/$REPO

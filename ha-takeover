@@ -1,0 +1,29 @@
+#!/bin/sh
+# take over all linux-ha resources when starting
+# Dave Dykstra, 20 December 2010
+
+case "$1" in
+    status)
+	if [ "`cl_status rscstatus 2>/dev/null`" = all ]; then
+	    echo running
+	else
+	    echo stopped
+	fi
+	;;
+    start)
+	# We only configure a HA resource on one side, but heartbeat still
+	#  keeps track of resource status as if there might be one on the
+	#  other side and sometimes reports both sides as being "local"
+	#  (for example when both machines turn on at about the same time
+	#  after a power outage).  Always request that non-existent resource
+	#  from the non-primary side when coming up so `cl_status rscstatus`
+	#  will always report "all" on the master.
+	if grep -q "^`uname -n`" /etc/ha.d/haresources; then
+	    # on primary machine
+	    /usr/share/heartbeat/hb_takeover foreign
+	else
+	    # on secondary machine
+	    /usr/share/heartbeat/hb_takeover local
+	fi
+	;;
+esac
