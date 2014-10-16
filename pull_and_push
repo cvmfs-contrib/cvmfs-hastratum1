@@ -65,7 +65,7 @@ ulimit -n $MAXFDS
 
 if [ -f /etc/krb5.keytab ]; then
     export KRB5CCNAME=FILE:/tmp/krb5cc_root_hastratum1
-    kinit -k host/$THISHOST
+    PATH=$PATH:/usr/krb5/bin:/usr/kerberos/bin kinit -k host/$THISHOST
 fi
 
 # base log name
