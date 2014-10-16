@@ -34,7 +34,9 @@ make PREFIX=%{buildroot} install
 
 %changelog
 * Thu Oct 16 2014 Dave Dykstra <dwd@fnal.gov> 1.1-1
-- set missing $THISHOST in remove-repository
+- fix a couple of kerberos-related things: set missing $THISHOST in
+    remove-repository, and set a PATH in pull_and_push to find kinit
+    (since cron doesn't set the PATH).
 
 * Thu Oct 10 2014 Dave Dykstra <dwd@fnal.gov> 1.0-1
 - Initial release
