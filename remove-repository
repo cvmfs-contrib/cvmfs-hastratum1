@@ -29,7 +29,8 @@ case "$REPO" in
 	;;
 esac
 
-case `uname -n` in
+THISHOST="`uname -n`"
+case $THISHOST in
     $HOST1) OTHERHOST=$HOST2;;
     $HOST2) OTHERHOST=$HOST1;;
     *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
