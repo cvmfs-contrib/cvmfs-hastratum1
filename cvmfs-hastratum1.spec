@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 1.0
+Version: 1.1
 Release: 1
 Group: Applications/System
 License: BSD
@@ -33,5 +33,8 @@ make PREFIX=%{buildroot} install
 /etc/logrotate.d/*
 
 %changelog
+* Thu Oct 16 2014 Dave Dykstra <dwd@fnal.gov> 1.1-1
+- set missing $THISHOST in remove-repository
+
 * Thu Oct 10 2014 Dave Dykstra <dwd@fnal.gov> 1.0-1
 - Initial release
