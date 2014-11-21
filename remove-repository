@@ -7,9 +7,15 @@
 
 usage()
 {
-    echo "Usage: remove-repository fqrn" >&2
+    echo "Usage: remove-repository [-f] fqrn" >&2
     exit 1
 }
+
+DONTFORCE=true
+if [ "$1" = "-f" ]; then
+    DONTFORCE=false
+    shift
+fi
 
 if [ $# != 1 ]; then
     usage
@@ -41,12 +47,14 @@ if [ ! -d "$STORAGE/$REPO" ]; then
     exit 1
 fi
 
-echo -n "Are you sure you want to remove $REPO from both machines? "
-read ANS
-case $ANS in
-    y*|Y*);;
-    *) exit 1;;
-esac
+if $DONTFORCE; then
+    echo -n "Are you sure you want to remove $REPO from both machines? "
+    read ANS
+    case $ANS in
+	y*|Y*);;
+	*) exit 1;;
+    esac
+fi
 
 set -ex
 
