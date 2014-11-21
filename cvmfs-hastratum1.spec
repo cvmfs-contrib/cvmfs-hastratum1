@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 1.1
+Version: 1.2
 Release: 1
 Group: Applications/System
 License: BSD
@@ -33,6 +33,9 @@ make PREFIX=%{buildroot} install
 /etc/logrotate.d/*
 
 %changelog
+* Fri Nov 21 2014 Dave Dykstra <dwd@fnal.gov> 1.2-1
+- add -f option to remove-repository command to skip asking for confirmation
+
 * Thu Oct 16 2014 Dave Dykstra <dwd@fnal.gov> 1.1-1
 - fix a couple of kerberos-related things: set missing $THISHOST in
     remove-repository, and set a PATH in pull_and_push to find kinit
