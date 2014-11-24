@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 1.2
+Version: 1.3
 Release: 1
 Group: Applications/System
 License: BSD
@@ -33,6 +33,10 @@ make PREFIX=%{buildroot} install
 /etc/logrotate.d/*
 
 %changelog
+* Mon Nov 24 2014 Dave Dykstra <dwd@fnal.gov> 1.3-1
+- also set a PATH in remove-repository and add-repository to find kinit,
+    in case they are run from cron
+
 * Fri Nov 21 2014 Dave Dykstra <dwd@fnal.gov> 1.2-1
 - add -f option to remove-repository command to skip asking for confirmation
 
