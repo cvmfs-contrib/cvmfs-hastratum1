@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 1.2
+Version: 1.3
 Release: 1
 Group: Applications/System
 License: BSD
@@ -33,6 +33,17 @@ make PREFIX=%{buildroot} install
 /etc/logrotate.d/*
 
 %changelog
+* Wed Feb 11 2015 Dave Dykstra <dwd@fnal.gov> 1.3-1
+- have add-repository and pull_and_push edit the new $CVMFS_STRATUM1 URL
+  put in server.conf by cvmfs-server 2.1.20, to point to the stage
+  subdirectory
+- change pull_and_push to accept single repository name to update instead
+  of all repositories
+- change add-repository to support keys directly in /etc/cvmfs/keys or
+  in /etc/cvmfs/keys/<domain> directories
+- change add-repository to add optional $EXTRAKEYS to added repository
+  if they're not already in the default
+
 * Fri Nov 21 2014 Dave Dykstra <dwd@fnal.gov> 1.2-1
 - add -f option to remove-repository command to skip asking for confirmation
 
