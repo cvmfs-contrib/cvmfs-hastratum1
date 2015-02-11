@@ -108,7 +108,9 @@ if [ "$SRV" != "/srv/cvmfs" ]; then
 fi
 
 rsync -a --delete $REPOSTORE/ $OTHERHOST:$REPOSTORE
-sed -i 's,^CVMFS_STRATUM0=\(.*\),CVMFS_STRATUM0=${CVMFS_SERVER_OVERRIDE:-\1},' /etc/cvmfs/repositories.d/$REPO/server.conf
+sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' \
+  -e 's,^CVMFS_STRATUM0=\(.*\),CVMFS_STRATUM0=${CVMFS_SERVER_OVERRIDE:-\1},' \
+  /etc/cvmfs/repositories.d/$REPO/server.conf
 rsync -a /etc/cvmfs/repositories.d/$REPO $OTHERHOST:/etc/cvmfs/repositories.d
 rsync -a /var/spool/cvmfs/$REPO $OTHERHOST:/var/spool/cvmfs
 ssh $OTHERHOST mkdir -p $SRV

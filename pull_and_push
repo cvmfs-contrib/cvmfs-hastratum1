@@ -156,6 +156,13 @@ for REPO in $REPOS; do
     if (
     echo
     echo "Pulling to $STOREDIR started at `date`"
+    if grep -q "^CVMFS_STRATUM1" $REPODIR/server.conf; then
+	if ! grep -q "^CVMFS_STRATUM1.*/stage$" $REPODIR/server.conf; then
+	    # must have been migrated from cvmfs-2.1.19 to cvmfs-2.1.20
+	    echo "Adding /stage to CVMFS_STRATUM1 in $REPODIR/server.conf"
+	    sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' $REPODIR/server.conf
+	fi
+    fi
     if ! cvmfs_server snapshot $REPO; then
 	echo "ERROR from cvmfs_server, skipping push!"
 	false
