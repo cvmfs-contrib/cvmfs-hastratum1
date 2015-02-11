@@ -32,14 +32,18 @@
 
 usage()
 {
-    echo "Usage: $0 [ABORT]" >&2
+    echo "Usage: $0 [reponame|ABORT]" >&2
     echo " If ABORT then abort any update in process" >&2
+    echo " If no reponame given, update all repositories in $SRV" >&2
     exit 2
 }
 
 ABORT=false
+REPOS=""
 if [ $# = 1 ] && [ "$1" = "ABORT" ]; then
     ABORT=true
+elif [ $# = 1 ]; then
+    REPOS="$1"
 elif [ $# != 0 ]; then
     usage
 fi
@@ -53,11 +57,21 @@ esac
 
 if [ ! -d "$SRV" ]; then
     echo "$SRV does not exist, nothing to do" >&2
+    exit 1
 fi
 
 if [ "`id -u`" != 0 ]; then
     echo "Not running as root" >&2
     exit 1
+fi
+
+if [ "$REPOS" != "" ]; then
+    if [ ! -d "$SRV/$REPOS" ]; then
+	echo "$SRV/$REPOS does not exist" >&2
+	exit 1
+    fi
+else
+    REPOS="`cd $SRV;echo *`"
 fi
 
 MAXFDS=16384
@@ -122,7 +136,7 @@ if [ $RET != 0 ]; then
 fi
 
 (
-for REPO in `cd $SRV;echo *`; do
+for REPO in $REPOS; do
     #stdout here is used to coordinate with the push side, so
     #  everything else has to be redirected to stderr
     REPODIR=/etc/cvmfs/repositories.d/$REPO
