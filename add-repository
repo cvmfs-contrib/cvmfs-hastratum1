@@ -3,6 +3,7 @@
 # This can be run on either host.
 # Written by Dave Dykstra 20 June 2014
 
+EXTRAKEYS=""
 . /etc/cvmfs/hastratum1.conf
 
 refreshcredentials()
@@ -38,25 +39,30 @@ REPO="$1"
 URL="$2"
 SOURCEREPO="$3"
 
-KEYS=""
 SHORTREPO=""
 case "$REPO" in
-    *.cern.ch)
-	SHORTREPO="${REPO%%.*}"
-	KEYS="/etc/cvmfs/keys/cern.ch.pub:/etc/cvmfs/keys/cern-it1.cern.ch.pub:/etc/cvmfs/keys/cern-it2.cern.ch.pub"
-	;;
-    *.opensciencegrid.org)
+    *.cern.ch|*.opensciencegrid.org)
 	SHORTREPO="${REPO%%.*}"
 	;;
 esac
 
 DOMAIN="${REPO#*.}"
-if [ -z "$KEYS" ]; then
-    KEYS="/etc/cvmfs/keys/$DOMAIN.pub"
-    if [ ! -f $KEYS ]; then
-	echo "$KEYS not found, aborting" >&2
-	exit 1
-    fi
+if [ -d /etc/cvmfs/keys/$DOMAIN ]; then
+    KEYS="`echo /etc/cvmfs/keys/$DOMAIN/*.pub|tr ' ' ':'`"
+elif [ -f /etc/cvmfs/keys/$DOMAIN.pub ]; then
+    KEYS="`echo /etc/cvmfs/keys/*$DOMAIN.pub|tr ' ' ':'`"
+else
+    echo "$DOMAIN.pub not found in /etc/cvmfs/keys, aborting" >&2
+    exit 1
+fi
+
+if [ -n "$EXTRAKEYS" ]; then
+    case "$KEYS" in
+	*"$EXTRAKEYS"*)
+	    ;;
+	*) KEYS="$KEYS:$EXTRAKEYS"
+	    ;;
+    esac
 fi
 
 THISHOST="`uname -n`"
