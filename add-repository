@@ -12,7 +12,7 @@ refreshcredentials()
     #  if that is being used
     if [ ! -f /etc/krb5.keytab ]; then return; fi 
     export KRB5CCNAME=FILE:/tmp/krb5cc_root_hastratum1
-    kinit -k host/`uname -n`
+    PATH=$PATH:/usr/krb5/bin:/usr/kerberos/bin kinit -k host/`uname -n`
 }
 
 usage()
