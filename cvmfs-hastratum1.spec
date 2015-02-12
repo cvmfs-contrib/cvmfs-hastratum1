@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 1.4
+Version: 1.5
 Release: 1
 Group: Applications/System
 License: BSD
@@ -33,6 +33,10 @@ make PREFIX=%{buildroot} install
 /etc/logrotate.d/*
 
 %changelog
+* Thu Feb 12 2015 Dave Dykstra <dwd@fnal.gov> 1.5-1
+- have pull_and_push also append /stage to CVMFS_STRATUM1 on the backup
+  host if it isn't there.
+
 * Wed Feb 11 2015 Dave Dykstra <dwd@fnal.gov> 1.4-1
 - have add-repository and pull_and_push edit the new $CVMFS_STRATUM1 URL
   put in server.conf by cvmfs-server 2.1.20, to point to the stage
