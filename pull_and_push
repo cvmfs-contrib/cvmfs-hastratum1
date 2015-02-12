@@ -135,6 +135,10 @@ if [ $RET != 0 ]; then
     exit
 fi
 
+
+CVSC='/etc/cvmfs/repositories.d/$REPO/server.conf' # $REPO substituted later
+FIXS1STAGE="grep -q CVMFS_STRATUM1 $CVSC && ! grep -q 'CVMFS_STRATUM1.*/stage' $CVSC && echo Adding /stage to CVMFS_STRATUM1 in $CVSC && sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' $CVSC"
+
 (
 for REPO in $REPOS; do
     #stdout here is used to coordinate with the push side, so
@@ -156,13 +160,7 @@ for REPO in $REPOS; do
     if (
     echo
     echo "Pulling to $STOREDIR started at `date`"
-    if grep -q "^CVMFS_STRATUM1" $REPODIR/server.conf; then
-	if ! grep -q "^CVMFS_STRATUM1.*/stage$" $REPODIR/server.conf; then
-	    # must have been migrated from cvmfs-2.1.19 to cvmfs-2.1.20
-	    echo "Adding /stage to CVMFS_STRATUM1 in $REPODIR/server.conf"
-	    sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' $REPODIR/server.conf
-	fi
-    fi
+    eval $FIXS1STAGE
     if ! cvmfs_server snapshot $REPO; then
 	echo "ERROR from cvmfs_server, skipping push!"
 	false
@@ -181,7 +179,7 @@ echo "Pulling finished at `date`" >&2
     # only data directory is copied here by rsync to make sure .cvmfs files
     #  get copied last, in case fail-over to the backup happens in the
     #  middle of an rsync 
-    if ssh -o ConnectTimeout=10 $OTHERHOST "ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot $REPO" || \
+    if ssh -o ConnectTimeout=10 $OTHERHOST "REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot $REPO" || \
 		[ -f /etc/cvmfs/runstandalone ]; then
 	SERVED="`cd $STOREDIR;cd $(/bin/pwd)/..;pwd`"
 	if [ ! -d "$SERVED" ]; then
