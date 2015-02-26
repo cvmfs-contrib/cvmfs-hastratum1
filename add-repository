@@ -17,7 +17,8 @@ refreshcredentials()
 
 usage()
 {
-    echo "Usage: add-repository fqrn http://stratum-zero-fqdn:port [sourcefqrn]" >&2
+    echo "Usage: add-repository fqrn {continue|http://stratum-zero-fqdn:port [sourcefqrn]}" >&2
+    echo "If second parameter is "continue", continue from a failed snapshot" >&2
     exit 1
 }
 
@@ -25,8 +26,11 @@ if [ $# != 2 ] && [ $# != 3 ]; then
     usage
 fi
 
+CREATEREPO=true
 case "$2" in
     http://*);;
+    continue)
+	CREATEREPO=false;;
     *) usage;;
 esac
 
@@ -72,58 +76,82 @@ case $THISHOST in
     *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
 esac
 
-if [ -d "$STORAGE/$REPO" ]; then
-    echo "$STORAGE/$REPO already exists" >&2
-    exit 1
-fi
-
 REPOSTORE=$STORAGE/$REPO
 
-set -ex
+set -e
 
 refreshcredentials
 
-# this is first to allow remove-repository to run on either host even if 
-#  this command is aborted
-ssh $OTHERHOST mkdir -p $REPOSTORE
-
-mkdir -p $REPOSTORE/data $REPOSTORE/stage
-ln -s ../data $REPOSTORE/stage/data
-
-if [ -n "$SHORTREPO" ]; then
-    ln -s $REPO $STORAGE/$SHORTREPO
-    ssh $OTHERHOST ln -s $REPO $STORAGE/$SHORTREPO
-fi
-
-mkdir -p /srv/cvmfs
-ln -s $REPOSTORE/stage /srv/cvmfs/$REPO
-if [ -z "$SOURCEREPO" ]; then
-    cvmfs_server add-replica -o root $URL/cvmfs/$REPO $KEYS
+if $CREATEREPO; then
+    if [ -d "$REPOSTORE" ]; then
+	echo "$REPOSTORE already exists" >&2
+	exit 1
+    fi
 else
-    cvmfs_server add-replica -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
-fi
-rm -f /etc/httpd/conf.d/cvmfs.$REPO.conf
-if [ "$SRV" != "/srv/cvmfs" ]; then
-    mkdir -p $SRV
-    mv /srv/cvmfs/$REPO $SRV
-    sed -i "s,/srv/cvmfs/,$SRV/,g" /etc/cvmfs/repositories.d/$REPO/server.conf
-    if [ -L /var/spool/cvmfs/$REPO/tmp ]; then
-	rm -f /var/spool/cvmfs/$REPO/tmp
-	ln -s $SRV/$REPO/data/txn /var/spool/cvmfs/$REPO/tmp
+    if [ ! -d "$REPOSTORE" ]; then
+	echo "$REPOSTORE does not exist, cannot continue" >&2
+	exit 1
+    fi
+    if [ ! -f "$REPOSTORE/stage/.cvmfs_master_replica" ]; then
+	echo "Creation of $REPO didn't finish, cannot continue" >&2
+	exit 1
+    fi
+    if ! ssh $OTHERHOST test -f $REPOSTORE/stage/.cvmfs_master_replica; then
+	echo "Creation of $REPO on $OTHERHOST didn't finish, cannot continue" >&2
+	exit 1
+    fi
+    if [ -f "$REPOSTORE/.cvmfspublished" ]; then
+	echo "Initial snapshot already done for $REPO, cannot continue" >&2
+	exit 1
     fi
 fi
 
-rsync -a --delete $REPOSTORE/ $OTHERHOST:$REPOSTORE
-sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' \
-  -e 's,^CVMFS_STRATUM0=\(.*\),CVMFS_STRATUM0=${CVMFS_SERVER_OVERRIDE:-\1},' \
-  /etc/cvmfs/repositories.d/$REPO/server.conf
-rsync -a /etc/cvmfs/repositories.d/$REPO $OTHERHOST:/etc/cvmfs/repositories.d
-rsync -a /var/spool/cvmfs/$REPO $OTHERHOST:/var/spool/cvmfs
-ssh $OTHERHOST mkdir -p $SRV
-rsync -a $SRV/$REPO $OTHERHOST:$SRV
+set -x
 
-touch $REPOSTORE/stage/.cvmfs_master_replica
-ssh $OTHERHOST touch $REPOSTORE/stage/.cvmfs_master_replica
+if $CREATEREPO; then
+    # this is first to allow remove-repository to run on either host even if 
+    #  this command is aborted
+    ssh $OTHERHOST mkdir -p $REPOSTORE
+
+    mkdir -p $REPOSTORE/data $REPOSTORE/stage
+    ln -s ../data $REPOSTORE/stage/data
+
+    if [ -n "$SHORTREPO" ]; then
+	ln -s $REPO $STORAGE/$SHORTREPO
+	ssh $OTHERHOST ln -s $REPO $STORAGE/$SHORTREPO
+    fi
+
+    mkdir -p /srv/cvmfs
+    ln -s $REPOSTORE/stage /srv/cvmfs/$REPO
+    if [ -z "$SOURCEREPO" ]; then
+	cvmfs_server add-replica -o root $URL/cvmfs/$REPO $KEYS
+    else
+	cvmfs_server add-replica -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
+    fi
+    rm -f /etc/httpd/conf.d/cvmfs.$REPO.conf
+    if [ "$SRV" != "/srv/cvmfs" ]; then
+	mkdir -p $SRV
+	mv /srv/cvmfs/$REPO $SRV
+	sed -i "s,/srv/cvmfs/,$SRV/,g" /etc/cvmfs/repositories.d/$REPO/server.conf
+	if [ -L /var/spool/cvmfs/$REPO/tmp ]; then
+	    rm -f /var/spool/cvmfs/$REPO/tmp
+	    ln -s $SRV/$REPO/data/txn /var/spool/cvmfs/$REPO/tmp
+	fi
+    fi
+
+    rsync -a --delete $REPOSTORE/ $OTHERHOST:$REPOSTORE
+    sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' \
+      -e 's,^CVMFS_STRATUM0=\(.*\),CVMFS_STRATUM0=${CVMFS_SERVER_OVERRIDE:-\1},' \
+      /etc/cvmfs/repositories.d/$REPO/server.conf
+    rsync -a /etc/cvmfs/repositories.d/$REPO $OTHERHOST:/etc/cvmfs/repositories.d
+    rsync -a /var/spool/cvmfs/$REPO $OTHERHOST:/var/spool/cvmfs
+    ssh $OTHERHOST mkdir -p $SRV
+    rsync -a $SRV/$REPO $OTHERHOST:$SRV
+
+    # these have to be last because of "continue" test above
+    touch $REPOSTORE/stage/.cvmfs_master_replica
+    ssh $OTHERHOST touch $REPOSTORE/stage/.cvmfs_master_replica
+fi
 
 cvmfs_server snapshot $REPO
 
