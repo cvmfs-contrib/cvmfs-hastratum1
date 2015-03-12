@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 1.6
+Version: 1.7
 Release: 1
 Group: Applications/System
 License: BSD
@@ -33,6 +33,10 @@ make PREFIX=%{buildroot} install
 /etc/logrotate.d/*
 
 %changelog
+* Thu Mar 12 2015 Dave Dykstra <dwd@fnal.gov> 1.7-1
+- Always have the /var/spool/cvmfs/<repo>/tmp symlink point to $STORAGE
+  so it's one less thing to do when moving a repo from one $SRV to another.
+
 * Thu Feb 26 2015 Dave Dykstra <dwd@fnal.gov> 1.6-1
 - add a "continue" option to add-repository to do just the snapshot
   part, in case the initial snapshot fails
