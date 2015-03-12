@@ -129,14 +129,15 @@ if $CREATEREPO; then
 	cvmfs_server add-replica -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
     fi
     rm -f /etc/httpd/conf.d/cvmfs.$REPO.conf
+    if [ -L /var/spool/cvmfs/$REPO/tmp ]; then
+	# change this link so repos can be moved to different $SRV directories
+	rm -f /var/spool/cvmfs/$REPO/tmp
+	ln -s $STORAGE/$REPO/data/txn /var/spool/cvmfs/$REPO/tmp
+    fi
     if [ "$SRV" != "/srv/cvmfs" ]; then
 	mkdir -p $SRV
 	mv /srv/cvmfs/$REPO $SRV
 	sed -i "s,/srv/cvmfs/,$SRV/,g" /etc/cvmfs/repositories.d/$REPO/server.conf
-	if [ -L /var/spool/cvmfs/$REPO/tmp ]; then
-	    rm -f /var/spool/cvmfs/$REPO/tmp
-	    ln -s $SRV/$REPO/data/txn /var/spool/cvmfs/$REPO/tmp
-	fi
     fi
 
     rsync -a --delete $REPOSTORE/ $OTHERHOST:$REPOSTORE
