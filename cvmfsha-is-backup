@@ -1,0 +1,7 @@
+#!/bin/bash
+. /etc/cvmfs/hastratum1.conf
+if [ -n "$IS_HA_BACKUP_CMD" ]; then
+    eval "$IS_HA_BACKUP_CMD"
+else
+    [ "`cl_status rscstatus 2>/dev/null`" == none ]
+fi

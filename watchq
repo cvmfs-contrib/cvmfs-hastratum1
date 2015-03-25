@@ -1,0 +1,10 @@
+#!/bin/bash
+TMPFILE=/tmp/watchq$$
+trap "rm -f $TMPFILE" 0
+while true; do 
+  netstat -an | grep ESTAB | awk '{if (($2 != 0) || ($3 != 0)) print}' | sort -n -k 5 >$TMPFILE
+  clear
+  echo "Proto Recv-Q Send-Q Local Address               Foreign Address             State"
+  cat $TMPFILE
+  sleep 1
+done

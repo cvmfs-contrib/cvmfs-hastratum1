@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 1.7
+Version: 2.0
 Release: 1
 Group: Applications/System
 License: BSD
@@ -9,7 +9,6 @@ Source: http://frontier.cern.ch/dist/cvmfs-hastratum1-%{version}.tgz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
 Requires: cvmfs-server
-Requires: heartbeat
 
 %description
 %{summary}
@@ -26,13 +25,34 @@ make PREFIX=%{buildroot} install
 [[ %{buildroot} != / ]] && rm -rf %{buildroot}
 
 %files
+/usr/bin/*
 /usr/sbin/*
 /etc/ha.d/*.in
 /etc/ha.d/resource.d/*
 /etc/cvmfs/*
 /etc/logrotate.d/*
+/usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Wed Mar 25 2015 Dave Dykstra <dwd@fnal.gov> 2.0-1
+- Remove Requires: heartbeat so package can also work without heartbeat
+- For convenience of non-heartbeat system, add a symlink pointing to
+    /etc/ha.d/resource.d/cvmfs-push-abort
+  at
+    /usr/share/cvmfs-hastratum1/push-abort
+- Add /usr/bin/cvmfsha-is-master and cvmfsha-is-backup which return an
+  exit code of 0 only on the master machine or backup machine
+  respectively (it is possible to be neither).  If the hastratum1.conf
+  configuration variable IS_HA_MASTER_CMD or IS_HA_BACKUP_CMD
+  respectively are set, the command listed will be eval'ed to
+  determine this; if the variables are not set, the corresponding
+  heartbeat commands are used.
+- Add "cvmfsha-" prefix symlinks for each of the /usr/sbin tools
+- Add OSG support tools in /usr/share/cvmfs-hastratum1: print-osg-repos
+  and generate-osg-replicas
+- Add general tool /usr/bin/watch-network-q for watching queued network
+  requests 
+
 * Thu Mar 12 2015 Dave Dykstra <dwd@fnal.gov> 1.7-1
 - Always have the /var/spool/cvmfs/<repo>/tmp symlink point to $STORAGE
   so it's one less thing to do when moving a repo from one $SRV to another.

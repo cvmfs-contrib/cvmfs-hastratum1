@@ -4,7 +4,7 @@
 
 case "$1" in
     status)
-	if [ "`cl_status rscstatus 2>/dev/null`" = all ]; then
+	if cvmfsha-is-master; then
 	    echo running
 	else
 	    echo stopped
