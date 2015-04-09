@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.0
+Version: 2.1
 Release: 1
 Group: Applications/System
 License: BSD
@@ -34,6 +34,10 @@ make PREFIX=%{buildroot} install
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Wed Apr 08 2015 Dave Dykstra <dwd@fnal.gov> 2.1-1
+- If /etc/cvmfs/keys/$REPO.pub exists, use that as the key instead of a
+  domain key.
+
 * Wed Mar 25 2015 Dave Dykstra <dwd@fnal.gov> 2.0-1
 - Remove Requires: heartbeat so package can also work without heartbeat
 - For convenience of non-heartbeat system, add a symlink pointing to
