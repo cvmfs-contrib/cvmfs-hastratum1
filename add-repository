@@ -51,7 +51,9 @@ case "$REPO" in
 esac
 
 DOMAIN="${REPO#*.}"
-if [ -d /etc/cvmfs/keys/$DOMAIN ]; then
+if [ -f /etc/cvmfs/keys/$REPO.pub ]; then
+    KEYS="/etc/cvmfs/keys/$REPO.pub"
+elif [ -d /etc/cvmfs/keys/$DOMAIN ]; then
     KEYS="`echo /etc/cvmfs/keys/$DOMAIN/*.pub|tr ' ' ':'`"
 elif [ -f /etc/cvmfs/keys/$DOMAIN.pub ]; then
     KEYS="`echo /etc/cvmfs/keys/*$DOMAIN.pub|tr ' ' ':'`"
