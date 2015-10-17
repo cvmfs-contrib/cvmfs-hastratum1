@@ -57,6 +57,8 @@ elif [ -d /etc/cvmfs/keys/$DOMAIN ]; then
     KEYS="`echo /etc/cvmfs/keys/$DOMAIN/*.pub|tr ' ' ':'`"
 elif [ -f /etc/cvmfs/keys/$DOMAIN.pub ]; then
     KEYS="`echo /etc/cvmfs/keys/*$DOMAIN.pub|tr ' ' ':'`"
+elif [ -n "$EXTRAKEYS" ]; then
+    echo "Note: $DOMAIN.pub not found, but \$EXTRAKEYS is set, so continuing" >&2
 else
     echo "$DOMAIN.pub not found in /etc/cvmfs/keys, aborting" >&2
     exit 1
