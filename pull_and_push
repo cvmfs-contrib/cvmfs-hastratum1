@@ -112,8 +112,14 @@ if ! ln $TMPLOCK $LOCKFILE 2>/dev/null; then
 	echo;echo "Broke lock $LOCKFILE from $OTHERPID at `date` because process was not running"
     else
 	if $ABORT; then
+	    # Note: this does not abort a push in progress, only a pull.
+	    # This should not cause a problem because aborts are done
+	    #  before switching mastership, and if the other machine
+	    #  becomes a master while the snapshot is still in progress 
+	    #  and tries to pull on that repository, it will just wait
+	    #  for the snapshot on that repository to finish.
 	    echo;echo "Aborting update pid $OTHERPID in progress at `date`"
-	    kill -9 -"$OTHERPID"
+	    kill -15 -"$OTHERPID"
 	    rm -f $LOCKFILE
 	    exit 1
 	fi
