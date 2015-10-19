@@ -119,7 +119,9 @@ if ! ln $TMPLOCK $LOCKFILE 2>/dev/null; then
 	    #  and tries to pull on that repository, it will just wait
 	    #  for the snapshot on that repository to finish.
 	    echo;echo "Aborting update pid $OTHERPID in progress at `date`"
-	    kill -15 -"$OTHERPID"
+	    kill -15 -"$OTHERPID"  # -15 works best when it was run from cron
+	    sleep 2
+	    kill -9 -"$OTHERPID" >&2 # -9 works best when it was run from shell
 	    rm -f $LOCKFILE
 	    exit 1
 	fi
