@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.1
+Version: 2.2
 Release: 1
 Group: Applications/System
 License: BSD
@@ -34,6 +34,18 @@ make PREFIX=%{buildroot} install
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Mon Oct 19 2015 Dave Dykstra <dwd@fnal.gov> 2.2-1
+- Change add-repository to allow a domain public key to be missing if
+  $EXTRAKEYS is set.  This is to support repositories from any domain
+  being signed by the OSG public key.
+- Add -h option to add-repository to add on only current half of ha pair
+  of machines.  This is for use when re-installing a machine.
+- Change pull_and_push to not do push if remote side hasn't finished
+  initial snapshot, because the initial snapshot can take a long time
+  when re-installing a machine from scratch including the data.
+- Change pull_and_push ABORT to kill with -15 instead of -9, so that
+  cvmfs_server can clean up any locks before exiting.
+
 * Wed Apr 08 2015 Dave Dykstra <dwd@fnal.gov> 2.1-1
 - If /etc/cvmfs/keys/$REPO.pub exists, use that as the key instead of a
   domain key.
