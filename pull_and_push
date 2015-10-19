@@ -180,7 +180,7 @@ echo "Pulling finished at `date`" >&2
     #  get copied last, in case fail-over to the backup happens in the
     #  middle of a push.
     # Need to first make sure other side has initial snapshot, to avoid
-    #  waiting if the other side is getting re-installed.
+    #  waiting long if the other side is getting re-installed from scratch.
     if ssh -o ConnectTimeout=10 $OTHERHOST "if [ ! -f $STOREDIR/.cvmfspublished ]; then echo "Initial snapshot not finished, skipping"; exit 1; fi;REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot $REPO" || \
 		[ -f /etc/cvmfs/runstandalone ]; then
 	SERVED="`cd $STOREDIR;cd $(/bin/pwd)/..;pwd`"
