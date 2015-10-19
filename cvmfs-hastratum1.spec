@@ -40,6 +40,8 @@ make PREFIX=%{buildroot} install
   being signed by the OSG public key.
 - Add -h option to add-repository to add on only current half of ha pair
   of machines.  This is for use when re-installing a machine.
+- Change add-repository to ignore differences in file modification times
+  of the data between the master and backup machines.
 - Change pull_and_push to not do push if remote side hasn't finished
   initial snapshot, because the initial snapshot can take a long time
   when re-installing a machine from scratch including the data.

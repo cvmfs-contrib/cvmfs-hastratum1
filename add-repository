@@ -208,7 +208,8 @@ refreshcredentials
 
 # arcfour cipher greatly reduces ssh CPU, and so increases throughput
 #  when CPU is the bottleneck
-rsync -a -e 'ssh -c arcfour' $REPOSTORE/ $OTHERHOST:$REPOSTORE
+# ignore differences in modification time
+rsync -a --size-only -e 'ssh -c arcfour' $REPOSTORE/ $OTHERHOST:$REPOSTORE
 
 refreshcredentials
 
