@@ -66,10 +66,9 @@ fi
 
 if [ -n "$EXTRAKEYS" ]; then
     case "$KEYS" in
-	*"$EXTRAKEYS"*)
-	    ;;
-	*) KEYS="$KEYS:$EXTRAKEYS"
-	    ;;
+	*"$EXTRAKEYS"*) ;;
+	"") KEYS="$EXTRAKEYS" ;;
+	*)  KEYS="$KEYS:$EXTRAKEYS" ;;
     esac
 fi
 
