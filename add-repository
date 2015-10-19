@@ -129,16 +129,20 @@ fi
 set -x
 
 if $CREATEREPO; then
-    # this is first to allow remove-repository to run on either host even if 
-    #  this command is aborted
-    ssh $OTHERHOST mkdir -p $REPOSTORE
+    if ! $HALFONLY; then
+	# this is first to allow remove-repository to run on either host even
+	#  if this command is aborted
+	ssh $OTHERHOST mkdir -p $REPOSTORE
+    fi
 
     mkdir -p $REPOSTORE/data $REPOSTORE/stage
     ln -s ../data $REPOSTORE/stage/data
 
     if [ -n "$SHORTREPO" ]; then
 	ln -s $REPO $STORAGE/$SHORTREPO
-	ssh $OTHERHOST ln -s $REPO $STORAGE/$SHORTREPO
+	if ! $HALFONLY; then
+	    ssh $OTHERHOST ln -s $REPO $STORAGE/$SHORTREPO
+	fi
     fi
 
     mkdir -p /srv/cvmfs
