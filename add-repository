@@ -17,10 +17,17 @@ refreshcredentials()
 
 usage()
 {
-    echo "Usage: add-repository fqrn {continue|http://stratum-zero-fqdn:port [sourcefqrn]}" >&2
-    echo "If second parameter is "continue", continue from a failed snapshot" >&2
+    echo "Usage: add-repository [-h] fqrn {continue|http://stratum-zero-fqdn:port [sourcefqrn]}" >&2
+    echo "  -h only creates the repository on this half of an ha-pair" >&2
+    echo "  If second required parameter is "continue", continue from a failed snapshot" >&2
     exit 1
 }
+
+HALFONLY=false
+if [ "$1" = "-h" ]; then
+    HALFONLY=true
+    shift
+fi
 
 if [ $# != 2 ] && [ $# != 3 ]; then
     usage
@@ -87,8 +94,18 @@ refreshcredentials
 
 if $CREATEREPO; then
     if [ -d "$REPOSTORE" ]; then
-	echo "$REPOSTORE already exists" >&2
-	exit 1
+	if $HALFONLY; then
+	    if [ -d "$REPOSTORE.ins" ]; then
+		echo "Both $REPOSTORE and $REPOSTORE.ins exist" >&2
+		exit 1
+	    fi
+	    # Old data left from previous install, save it for later
+	    echo "Saving $REPOSTORE to $REPOSTORE.ins"
+	    mv $REPOSTORE $REPOSTORE.ins
+	else
+	    echo "$REPOSTORE already exists" >&2
+	    exit 1
+	fi
     fi
 else
     if [ ! -d "$REPOSTORE" ]; then
@@ -99,7 +116,7 @@ else
 	echo "Creation of $REPO didn't finish, cannot continue" >&2
 	exit 1
     fi
-    if ! ssh $OTHERHOST test -f $REPOSTORE/stage/.cvmfs_master_replica; then
+    if ! $HALFONLY && ! ssh $OTHERHOST test -f $REPOSTORE/stage/.cvmfs_master_replica; then
 	echo "Creation of $REPO on $OTHERHOST didn't finish, cannot continue" >&2
 	exit 1
     fi
@@ -143,21 +160,42 @@ if $CREATEREPO; then
 	sed -i "s,/srv/cvmfs/,$SRV/,g" /etc/cvmfs/repositories.d/$REPO/server.conf
     fi
 
-    rsync -a --delete $REPOSTORE/ $OTHERHOST:$REPOSTORE
     sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' \
       -e 's,^CVMFS_STRATUM0=\(.*\),CVMFS_STRATUM0=${CVMFS_SERVER_OVERRIDE:-\1},' \
       /etc/cvmfs/repositories.d/$REPO/server.conf
-    rsync -a /etc/cvmfs/repositories.d/$REPO $OTHERHOST:/etc/cvmfs/repositories.d
-    rsync -a /var/spool/cvmfs/$REPO $OTHERHOST:/var/spool/cvmfs
-    ssh $OTHERHOST mkdir -p $SRV
-    rsync -a $SRV/$REPO $OTHERHOST:$SRV
+    if ! $HALFONLY; then
+	rsync -a --delete $REPOSTORE/ $OTHERHOST:$REPOSTORE
+	rsync -a /etc/cvmfs/repositories.d/$REPO $OTHERHOST:/etc/cvmfs/repositories.d
+	rsync -a /var/spool/cvmfs/$REPO $OTHERHOST:/var/spool/cvmfs
+	ssh $OTHERHOST mkdir -p $SRV
+	rsync -a $SRV/$REPO $OTHERHOST:$SRV
+    fi
 
     # these have to be last because of "continue" test above
     touch $REPOSTORE/stage/.cvmfs_master_replica
-    ssh $OTHERHOST touch $REPOSTORE/stage/.cvmfs_master_replica
+    if ! $HALFONLY; then
+	ssh $OTHERHOST touch $REPOSTORE/stage/.cvmfs_master_replica
+    fi
 fi
 
+if $HALFONLY && [ -d $REPOSTORE.ins ]; then
+    echo "Restoring $REPOSTORE.ins to $REPOSTORE"
+    rm -rf $REPOSTORE
+    mv $REPOSTORE.ins $REPOSTORE
+    if [ -f "$REPOSTORE/stage/.cvmfspublished" ]; then
+	# Initial snapshot done, assume the old data is reasonably up to date.
+	# Any that it is behind will be caught up at next update from master.
+	exit
+    fi
+fi
+
+# do initial snapshot
 cvmfs_server snapshot $REPO
+
+if $HALFONLY; then
+    # let the next update from master do the rest
+    exit
+fi
 
 refreshcredentials
 
