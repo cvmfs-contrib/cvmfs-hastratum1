@@ -34,6 +34,11 @@ make PREFIX=%{buildroot} install
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+- Allow pull_and_push to take over if both sides of a repository are
+  made with add-repository -h.
+- Hide error message in pull_and_push ABORT command coming from second
+  kill attempt if the first attempt succeeded.
+
 * Mon Oct 19 2015 Dave Dykstra <dwd@fnal.gov> 2.2-1
 - Change add-repository to allow a domain public key to be missing if
   $EXTRAKEYS is set.  This is to support repositories from any domain
