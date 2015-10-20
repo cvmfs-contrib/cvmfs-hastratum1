@@ -160,7 +160,7 @@ for REPO in $REPOS; do
     if [ -z "$STOREDIR" ]; then
 	continue
     fi
-    if [ ! -f `cd $STOREDIR;cd $(/bin/pwd)/..;pwd`/.cvmfspublished ]; then
+    if [ ! -f $STOREDIR/.cvmfspublished ]; then
 	echo >&2
 	echo "Initial snapshot of $REPO is not finished, skipping" >&2
 	continue
