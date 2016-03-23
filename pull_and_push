@@ -71,7 +71,8 @@ if [ "$REPOS" != "" ]; then
 	exit 1
     fi
 else
-    REPOS="`cd $SRV;echo *`"
+    # the '.' in the wildcard avoids the info directory
+    REPOS="`cd $SRV;echo *.*`"
 fi
 
 MAXFDS=16384
