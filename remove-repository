@@ -75,3 +75,8 @@ if [ -n "$SHORTREPO" ]; then
 fi
 ssh $OTHERHOST rm -rf $STORAGE/$REPO
 rm -rf $STORAGE/$REPO
+if [ "`echo $STORAGE/info/*`" != "$STORAGE/info/*" ]; then
+    # cvmfs-server 2.2.X or later
+    cvmfs_server update-info -e
+    rsync -a $STORAGE/info $OTHERHOST:$STORAGE
+fi

@@ -147,6 +147,11 @@ if $CREATEREPO; then
 
     mkdir -p /srv/cvmfs
     ln -s $REPOSTORE/stage /srv/cvmfs/$REPO
+    if [ ! -L /srv/cvmfs/info ]; then
+        rm -rf /srv/cvmfs/info
+        mkdir -p $STORAGE/info
+        ln -s $STORAGE/info /srv/cvmfs
+    fi
     if [ -z "$SOURCEREPO" ]; then
 	cvmfs_server add-replica -o root $URL/cvmfs/$REPO $KEYS
     else
@@ -172,7 +177,9 @@ if $CREATEREPO; then
 	rsync -a /etc/cvmfs/repositories.d/$REPO $OTHERHOST:/etc/cvmfs/repositories.d
 	rsync -a /var/spool/cvmfs/$REPO $OTHERHOST:/var/spool/cvmfs
 	ssh $OTHERHOST mkdir -p $SRV
+        rsync -a $STORAGE/info $OTHERHOST:$STORAGE
 	rsync -a $SRV/$REPO $OTHERHOST:$SRV
+        rsync -a /srv/cvmfs/info $OTHERHOST:/srv/cvmfs
     fi
 
     # these have to be last because of "continue" test above
