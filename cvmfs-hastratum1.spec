@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.2
+Version: 2.3
 Release: 1
 Group: Applications/System
 License: BSD
@@ -34,10 +34,14 @@ make PREFIX=%{buildroot} install
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Fri May 25 2015 Dave Dykstra <dwd@fnal.gov> 2.3-1
 - Allow pull_and_push to take over if both sides of a repository are
   made with add-repository -h.
 - Hide error message in pull_and_push ABORT command coming from second
   kill attempt if the first attempt succeeded.
+- Add support for cvmfs-server-2.2.X's info directory
+- Allow parallel pull_and_push commands, up to $MAXPARALLELPULL which
+  defaults to 4.
 
 * Mon Oct 19 2015 Dave Dykstra <dwd@fnal.gov> 2.2-1
 - Change add-repository to allow a domain public key to be missing if
