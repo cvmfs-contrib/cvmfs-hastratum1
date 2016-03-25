@@ -27,6 +27,9 @@
 # Adapted for cvmfs-server 2.1 15 July 2013
 # Adapted to use cvmfs_server snapshot instead of rsync for the main
 #   replication 4 September 2014.  Assumes apache is listening on port 8080.
+# Adapted for cvmfs-server 2.2 and parallel updates 24 March 2016.
+
+MAXPARALLELPULL=4
 
 . /etc/cvmfs/hastratum1.conf
 
@@ -71,8 +74,19 @@ if [ "$REPOS" != "" ]; then
 	exit 1
     fi
 else
-    # the '.' in the wildcard avoids the info directory
-    REPOS="`cd $SRV;echo *.*`"
+    # Sort the repositories by last snapshot time, oldest to last,
+    #  to avoid starvation.
+    # The '.' in the wildcard avoids the info directory.
+    REPOS="$(
+        cd $SRV
+        for REPO in *.*; do
+            SNAPFILE=$REPO/.cvmfs_last_snapshot
+            SNAPTIME=0
+            if [ -f $SNAPFILE ]; then
+                SNAPTIME="$(stat --format='%Y' $SNAPFILE)"
+            fi
+            echo $SNAPTIME:$REPO
+        done|sort -n|cut -d: -f2)"
 fi
 
 MAXFDS=16384
@@ -86,8 +100,10 @@ fi
 # base log name
 LOGBASE="${SRV##*/}"
 
-LOCKFILE=/var/run/${LOGBASE}-pullpush.lock
-TMPLOCK="$LOCKFILE.$$"
+RUNDIR=/var/run/cvmfs
+mkdir -p $RUNDIR
+LOCKBASE=$RUNDIR/${LOGBASE}-pullpush.lock
+TMPLOCK="$LOCKBASE.tmp.$$"
 # put in parent's process id so can abort whole process group
 echo "$PPID" >"$TMPLOCK"
 
@@ -97,56 +113,95 @@ fi
 PULLLOG=/var/log/cvmfs/${LOGBASE}-pull.log
 PUSHLOG=/var/log/cvmfs/${LOGBASE}-push.log
 
-(
-if ! ln $TMPLOCK $LOCKFILE 2>/dev/null; then
-    OTHERPID="`cat $LOCKFILE`"
-    if [ -z "$OTHERPID" ] || ! kill -0 "$OTHERPID" 2>/dev/null; then
-	rm -f $LOCKFILE
-	if $ABORT; then
-	    echo;echo "Abort not needed at `date` because although $LOCKFILE existed the process $OTHERPID was not running"
-	    exit 1
-	fi
-	if ! ln $TMPLOCK $LOCKFILE 2>/dev/null; then
-	    echo;echo "Attempted to break lock $LOCKFILE from $OTHERPID at `date` but failed, giving up"
-	    exit 1
-	fi
-	echo;echo "Broke lock $LOCKFILE from $OTHERPID at `date` because process was not running"
-    else
-	if $ABORT; then
-	    # Note: this does not abort a push in progress, only a pull.
-	    # This should not cause a problem because aborts are done
-	    #  before switching mastership, and if the other machine
-	    #  becomes a master while the snapshot is still in progress 
-	    #  and tries to pull on that repository, it will just wait
-	    #  for the snapshot on that repository to finish.
-	    echo;echo "Aborting update pid $OTHERPID in progress at `date`"
-	    kill -15 -"$OTHERPID"  # -15 works best when it was run from cron
-	    sleep 3
-	    kill -9 -"$OTHERPID" 2>/dev/null # -9 works best when it was run from shell
-	    rm -f $LOCKFILE
-	    exit 1
-	fi
-	echo;echo "Cannot create $LOCKFILE at `date`, already created by running process $OTHERPID"
-	exit 1
+LOCKN=0
+GOTONE=false
+OTHERPIDS=""
+LOCKFILE=""
+TMPPULLOG=""
+TMPPUSHLOG=""
+while [ "$LOCKN" -lt "$MAXPARALLELPULL" ]; do
+    let LOCKN+=1
+    LOCKFILE=$LOCKBASE.$LOCKN
+    TMPPULLLOG=$RUNDIR/${LOGBASE}-pull.log.$LOCKN
+    TMPPUSHLOG=$RUNDIR/${LOGBASE}-push.log.$LOCKN
+    if ln $TMPLOCK $LOCKFILE 2>/dev/null; then
+        # succeeded in getting this lock, job was not running
+        if $ABORT; then
+            # try the other jobs too
+            rm -f $LOCKFILE
+            continue
+        fi
+        GOTONE=true
+        break
     fi
-fi
-if $ABORT; then
-    echo;echo "Abort not needed at `date` because update not in progress"
-    rm -f $LOCKFILE
-    exit 1
-fi
-) >>$PULLLOG 2>&1
-RET=$?
+    # did not get the lock
+    OTHERPID="`cat $LOCKFILE 2>/dev/null`"
+    if [ -z "$OTHERPID" ] || ! kill -0 "$OTHERPID" 2>/dev/null; then
+        rm -f $LOCKFILE
+        if $ABORT; then
+            echo;echo "Removing $LOCKFILE at `date` because the process $OTHERPID was not running"
+            continue
+        fi
+        if ! ln $TMPLOCK $LOCKFILE 2>/dev/null; then
+            echo;echo "Attempted to break lock $LOCKFILE from $OTHERPID at `date` but failed"
+            continue
+        fi
+        echo;echo "Broke lock $LOCKFILE from $OTHERPID at `date` because process was not running"
+        GOTONE=true
+        break
+    fi
+    if $ABORT; then
+        # Note: this does not abort a push in progress, only a pull.
+        # This should not cause a problem because aborts are done
+        #  before switching mastership, and if the other machine
+        #  becomes a master while the snapshot is still in progress 
+        #  and tries to pull on that repository, it will have its own
+        #  lock and so won't clash.
+        echo;echo "Aborting update pid $OTHERPID in progress at `date`"
+        kill -15 -"$OTHERPID"  # -15 works best when it was run from cron
+        sleep 3
+        kill -9 -"$OTHERPID" 2>/dev/null # -9 works best when it was run from shell
+        rm -f $LOCKFILE
+        sleep 3 
+        # save its aborted logs if it didn't do it itself
+        if [ -f $TMPPULLLOG ]; then
+            # stdout is going to $PULLOG
+            cat $TMPPULLLOG 
+            rm -f $TMPPULLLOG
+        fi
+        if [ -f $TMPPUSHLOG ]; then
+            cat $TMPPUSHLOG  >> $PUSHLOG
+            rm -f $TMPPUSHLOG
+        fi
+        GOTONE=true
+        continue
+    fi
+    OTHERPIDS="$OTHERPIDS $OTHERPID"
+done >>$PULLLOG 2>&1
 
 rm -f $TMPLOCK
 
-if [ $RET != 0 ]; then
+if ! $GOTONE; then
+  if $ABORT; then
+        echo;echo "Abort not needed at `date` because update not in progress"
+        exit 1
+    fi
+    echo;echo "Cannot create $LOCKBASE.* at `date`, already created by running process(es)$OTHERPIDS"
+    exit 1
+fi >>$PULLLOG 2>&1
+
+if $ABORT; then
     exit
 fi
 
-
 CVSC='/etc/cvmfs/repositories.d/$REPO/server.conf' # $REPO substituted later
 FIXS1STAGE="grep -q CVMFS_STRATUM1 $CVSC && ! grep -q 'CVMFS_STRATUM1.*/stage' $CVSC && echo Adding /stage to CVMFS_STRATUM1 in $CVSC && sed -i -e 's,^CVMFS_STRATUM1=\(.*\),CVMFS_STRATUM1=\1/stage,' $CVSC"
+
+
+(
+echo
+echo "Logging in $RUNDIR/${LOGBASE}-pu*.log.$LOCKN at `date`"
+) >>$PULLLOG
 
 (
 for REPO in $REPOS; do
@@ -161,16 +216,16 @@ for REPO in $REPOS; do
     if [ -z "$STOREDIR" ]; then
 	continue
     fi
-    if [ ! -f $STOREDIR/.cvmfspublished ]; then
+    if [ ! -f $STOREDIR/.cvmfs_last_snapshot ]; then
 	echo >&2
 	echo "Initial snapshot of $REPO is not finished, skipping" >&2
 	continue
     fi
     if (
     echo
-    echo "Pulling to $STOREDIR started at `date`"
+    echo "Pulling to $STOREDIR started at `date` (lock $LOCKN)"
     eval $FIXS1STAGE
-    if ! cvmfs_server snapshot $REPO; then
+    if ! cvmfs_server snapshot -t $REPO; then
 	echo "ERROR from cvmfs_server, skipping push!"
 	false
     fi
@@ -181,16 +236,16 @@ for REPO in $REPOS; do
     fi
 done 
 echo "Pulling finished at `date`" >&2
-) 2>>$PULLLOG | (while read REPO STOREDIR; do
+) 2>>$TMPPULLLOG | (while read REPO STOREDIR; do
     (
     echo
-    echo "Pushing $STOREDIR started at `date`"
+    echo "Pushing $STOREDIR started at `date` (lock $LOCKN)"
     # Only data directory is copied here, to make sure .cvmfs files
     #  get copied last, in case fail-over to the backup happens in the
     #  middle of a push.
     # Need to first make sure other side has initial snapshot, to avoid
     #  waiting long if the other side is getting re-installed from scratch.
-    if ssh -o ConnectTimeout=10 $OTHERHOST "if [ ! -f $STOREDIR/.cvmfspublished ]; then echo "Initial snapshot not finished, skipping"; exit 1; fi;REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot $REPO" || \
+    if ssh -o ConnectTimeout=10 $OTHERHOST "if [ ! -f $STOREDIR/.cvmfs_last_snapshot ]; then echo "Initial snapshot not finished, skipping"; exit 1; fi;REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO" || \
 		[ -f /etc/cvmfs/runstandalone ]; then
 	SERVED="`cd $STOREDIR;cd $(/bin/pwd)/..;pwd`"
 	if [ ! -d "$SERVED" ]; then
@@ -212,6 +267,9 @@ echo "Pulling finished at `date`" >&2
     ) </dev/null
 done
 echo "Pushing finished at `date`"
-) >>$PUSHLOG 2>&1
+) >>$TMPPUSHLOG 2>&1
 
-rm -f $LOCKFILE
+cat $TMPPULLLOG >>$PULLLOG
+cat $TMPPUSHLOG >>$PUSHLOG
+
+rm -f $TMPPULLLOG $TMPPUSHLOG $LOCKFILE
