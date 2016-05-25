@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.3
+Version: 2.4
 Release: 1
 Group: Applications/System
 License: BSD
@@ -21,6 +21,10 @@ Requires: cvmfs-server
 ls
 make PREFIX=%{buildroot} install
 
+%post
+# compress uncompressed logs
+find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzip
+
 %clean
 [[ %{buildroot} != / ]] && rm -rf %{buildroot}
 
@@ -34,7 +38,10 @@ make PREFIX=%{buildroot} install
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
-* Fri May 25 2016 Dave Dykstra <dwd@fnal.gov> 2.3-1
+* Fri May 25 2016 Dave Dykstra <dwd@fnal.gov> 2.4-1
+- Compress log files
+
+* Fri Mar 25 2016 Dave Dykstra <dwd@fnal.gov> 2.3-1
 - Allow pull_and_push to take over if both sides of a repository are
   made with add-repository -h.
 - Hide error message in pull_and_push ABORT command coming from second

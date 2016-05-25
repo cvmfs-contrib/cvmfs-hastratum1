@@ -1,4 +1,6 @@
 /var/log/cvmfs/*.log {
     weekly
     rotate 5
+    compress
+    dataext
 }
