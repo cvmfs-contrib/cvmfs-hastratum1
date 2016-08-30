@@ -17,15 +17,21 @@ refreshcredentials()
 
 usage()
 {
-    echo "Usage: add-repository [-h] fqrn {continue|http://stratum-zero-fqdn:port [sourcefqrn]}" >&2
-    echo "  -h only creates the repository on this half of an ha-pair" >&2
+    echo "Usage: add-repository [-h|-H] fqrn {continue|http://stratum-zero-fqdn:port [sourcefqrn]}" >&2
+    echo "  -h only creates the repository on this half of an HA pair" >&2
+    echo "  -H is like -h but only creates if data already present" >&2
     echo "  If second required parameter is "continue", continue from a failed snapshot" >&2
     exit 1
 }
 
 HALFONLY=false
+ONLYIFDATA=false
 if [ "$1" = "-h" ]; then
     HALFONLY=true
+    shift
+elif [ "$1" = "-H" ]; then
+    HALFONLY=true
+    ONLYIFDATA=true
     shift
 fi
 
@@ -106,6 +112,12 @@ if $CREATEREPO; then
 	    echo "$REPOSTORE already exists" >&2
 	    exit 1
 	fi
+    elif $ONLYIFDATA; then
+        # This is used from generate_replicas to only add a repo config
+        #  on one half if some data already existed.  If data does not
+        #  yet exist, wait for the master's generate_replicas to add it.
+        echo "$REPOSTORE not previously present, skipping" >&2
+        exit 0
     fi
 else
     if [ ! -d "$REPOSTORE" ]; then
