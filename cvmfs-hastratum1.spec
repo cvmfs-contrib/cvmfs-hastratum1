@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.4
+Version: 2.5
 Release: 1
 Group: Applications/System
 License: BSD
@@ -38,6 +38,14 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Tue Aug 30 2016 Dave Dykstra <dwd@fnal.gov> 2.5-1
+- Add -H option to add-repository that's just like -h except will only
+  add if some old data is present.
+- Add -h option to remove-repository to remove only the current HA half
+  and leave data behind.
+- Add -t option to generate_replicas to only generate a short list of
+  test replicas rather than the whole list.
+
 * Fri May 25 2016 Dave Dykstra <dwd@fnal.gov> 2.4-1
 - Compress log files
 
