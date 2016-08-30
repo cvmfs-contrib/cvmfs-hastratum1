@@ -10,8 +10,9 @@ default_add_repo_command = 'add_osg_repository %u'
 default_undo_command = 'cvmfs_server rmfs -f %r'
 
 def usage():
-    sys.stderr.write('Usage: generate_replicas ["add_repo_command" ["undo_command"]]\n')
+    sys.stderr.write('Usage: generate_replicas [-t] ["add_repo_command" ["undo_command"]]\n')
     sys.stderr.write('  Adds missing CVMFS replicas registered in OIM using add_repo_command.\n')
+    sys.stderr.write('  -t: use only a short list for testing instead of all\n')
     sys.stderr.write('  If add_repo_command provided, it must contain %u or %r and\n')
     sys.stderr.write('    must both add the replica and download the first snapshot.\n')
     sys.stderr.write('    %u - full url from OIM\n')
@@ -23,6 +24,11 @@ def usage():
     sys.stderr.write('  If replica exists but has wrong URL, and add_repo_command contains %u,\n')
     sys.stderr.write('     the URL will be changed to the new value.\n')
     sys.exit(1)
+
+testrepos = []
+if (len(sys.argv) > 1) and (sys.argv[1] == '-t'):
+    del sys.argv[1]
+    testrepos = ["usatlast3.opensciencegrid.org"]
 
 if len(sys.argv) > 3:
     usage()
@@ -62,9 +68,13 @@ doc = libxml2.parseDoc(xml)
 for urlfield in doc.xpathEval("//VO/OASIS/OASISRepoURLs/URL"):
     url = urlfield.content
     if url[-1] == '/':
-      # remove a trailing slash
-      url = url[:-1]
+        # remove a trailing slash
+        url = url[:-1]
     repo = url[url.rfind('/')+1:]
+    if len(testrepos) > 0:
+        if repo not in testrepos:
+            continue
+        logmsg('Checking test repo ' + repo)
     serverconf = '/etc/cvmfs/repositories.d/' + repo + '/server.conf'
     replicaconf = '/etc/cvmfs/repositories.d/' + repo + '/replica.conf'
     if os.path.exists(serverconf):
