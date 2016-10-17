@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.5
+Version: 2.6
 Release: 1
 Group: Applications/System
 License: BSD
@@ -38,6 +38,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Mon Oct 17 2016 Dave Dykstra <dwd@fnal.gov> 2.6-1
+- Change add-repository to always use cvmfs_server add-replica -z to enable
+  garbage collection when it is available in the upstream repository.
+
 * Tue Aug 30 2016 Dave Dykstra <dwd@fnal.gov> 2.5-1
 - Add -H option to add-repository that's just like -h except will only
   add if some old data is present.
