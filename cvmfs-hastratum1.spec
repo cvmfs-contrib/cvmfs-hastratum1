@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.6
+Version: 2.7
 Release: 1
 Group: Applications/System
 License: BSD
@@ -38,6 +38,12 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Tue Oct 18 2016 Dave Dykstra <dwd@fnal.gov> 2.7-1
+- Back out the change from 2.6-1 and instead add script cvmfsha-gc-all
+  that runs garbage collection on all repositories that have garbage
+  collection enabled on the stratum 0.  Call it from cron on both
+  master and backup machines, and redirect output to a log file.
+
 * Mon Oct 17 2016 Dave Dykstra <dwd@fnal.gov> 2.6-1
 - Change add-repository to always use cvmfs_server add-replica -z to enable
   garbage collection when it is available in the upstream repository.
