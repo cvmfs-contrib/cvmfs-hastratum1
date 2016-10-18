@@ -9,6 +9,7 @@ install:
 	ln -s add-repository $(PREFIX)/usr/sbin/cvmfsha-add-repository
 	install -D -m 555 remove-repository $(PREFIX)/usr/sbin/remove-repository
 	ln -s remove-repository $(PREFIX)/usr/sbin/cvmfsha-remove-repository
+	install -D -m 555 cvmfsha-gc-all $(PREFIX)/usr/sbin/cvmfsha-gc-all
 	install -D -m 555 cvmfsha-is-master $(PREFIX)/usr/bin/cvmfsha-is-master
 	install -D -m 555 cvmfsha-is-backup $(PREFIX)/usr/bin/cvmfsha-is-backup
 	install -D -m 555 watchq $(PREFIX)/usr/bin/watch-network-q
