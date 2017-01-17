@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.7
+Version: 2.8
 Release: 1
 Group: Applications/System
 License: BSD
@@ -38,6 +38,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Tue Jan 17 2017 Dave Dykstra <dwd@fnal.gov> 2.8-1
+- Remove .cvmfsreflog if it is present when adding repository back on
+  existing data with add-repository -h.
+
 * Tue Oct 18 2016 Dave Dykstra <dwd@fnal.gov> 2.7-1
 - Back out the change from 2.6-1 and instead add script cvmfsha-gc-all
   that runs garbage collection on all repositories that have garbage
