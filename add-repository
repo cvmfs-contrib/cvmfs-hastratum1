@@ -205,6 +205,10 @@ if $HALFONLY && [ -d $REPOSTORE.ins ]; then
     echo "Restoring $REPOSTORE.ins to $REPOSTORE"
     rm -rf $REPOSTORE
     mv $REPOSTORE.ins $REPOSTORE
+    if [ -f "$REPOSTORE/stage/.cvmfsreflog" ]; then
+        echo "Removing $REPOSTORE/stage/.cvmfsreflog"
+        rm $REPOSTORE/stage/.cvmfsreflog
+    fi
     if [ -f "$REPOSTORE/stage/.cvmfspublished" ]; then
 	# Initial snapshot done, assume the old data is reasonably up to date.
 	# Any that it is behind will be caught up at next update from master.
