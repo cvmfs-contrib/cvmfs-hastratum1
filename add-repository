@@ -236,6 +236,7 @@ rsync -a --size-only -e 'ssh -c arcfour' $REPOSTORE/ $OTHERHOST:$REPOSTORE
 
 refreshcredentials
 
+rsync -a /var/spool/cvmfs/$REPO/reflog.chksum $OTHERHOST:/var/spool/cvmfs/$REPO
 EXCLUDES=" --exclude .cvmfs_master_replica --exclude data --exclude stage"
 rsync -a $EXCLUDES $REPOSTORE/stage/ $REPOSTORE/
 rsync -a $EXCLUDES $REPOSTORE/stage/ $OTHERHOST:$REPOSTORE/
