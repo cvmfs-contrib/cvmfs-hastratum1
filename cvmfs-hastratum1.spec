@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.8
+Version: 2.9
 Release: 1
 Group: Applications/System
 License: BSD
@@ -38,6 +38,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Tue Jan 17 2017 Dave Dykstra <dwd@fnal.gov> 2.9-1
+- Copy the reflog.chksum file to the backup machine in add-repository,
+  when it is invoked without -h.
+
 * Tue Jan 17 2017 Dave Dykstra <dwd@fnal.gov> 2.8-1
 - Remove .cvmfsreflog if it is present when adding repository back on
   existing data with add-repository -h.
