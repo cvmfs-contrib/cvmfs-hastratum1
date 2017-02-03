@@ -14,20 +14,21 @@ import fnmatch
 
 prog = 'manage-replicas'
 addcmd = 'add-repository @fqrn@ @url@'
-remcmd = 'remove-repository @fqrn@'
+remcmd = 'remove-repository -f @fqrn@'
 replist = ''
 source = ''
 keypath = ''
 excludes = []
-repospecs = []
+oldrepos = []
+repospecs = {}
 replicalist = []
 
 usagestr = "Usage: %prog [-h ] [ other_options ]\n" \
            "    Use -h to see help"
 parser = OptionParser(usage=usagestr, prog=prog)
 parser.add_option("-f", "--config",
-                  metavar="file", default="/etc/cvmfs/replicas.conf",
-                  help="use file as configuration file")
+                  metavar="file", default="/etc/cvmfs/manage-replicas.conf",
+                  help="use file as configuration file. Default value: /etc/cvmfs/manage-replicas.conf")
 parser.add_option("-n", "--dry-run",
                   action="store_true", default=False,
                   help="Show what would be done, don't actually do it")
@@ -50,9 +51,6 @@ def fatal(msg, code=1):
 def efatal(msg, e, code=1):
   fatal(msg + ': ' + type(e).__name__ + ': ' + str(e), code)
 
-if options.remove:
-  fatal('--remove option not implemented yet')
-
 # read the config file
 try:
   fd = open(options.config, 'r')
@@ -72,6 +70,18 @@ def configfatal(msg):
 if not options.list:
   logmsg('Starting')
 
+# find out existing repository names
+for dir in os.listdir('/etc/cvmfs/repositories.d'):
+  if os.path.exists('/etc/cvmfs/repositories.d/' + dir + '/replica.conf'):
+    oldrepos.append(dir)
+
+def excluded(repo):
+  for exclude in excludes:
+    if fnmatch.fnmatch(repo, exclude):
+      return True
+  return False
+
+# go through the config file
 for line in lines:
   linenum += 1
   # remove comments and trailing whitespace
@@ -112,40 +122,44 @@ for line in lines:
           configfatal('No replist specified before repos')
         for replica in replicalist:
           if fnmatch.fnmatch(replica, repo):
-            excluded = False
-            for exclude in excludes:
-              if fnmatch.fnmatch(replica, exclude):
-                excluded = True
-                break
-            if not excluded:
-              repospecs.append([replica, source, keypath])
+            if not excluded(replica):
+              repospecs[replica] = [source, keypath]
+        if not options.list:
+          # look for extra repositories matching this wildcard
+          for oldrepo in oldrepos:
+            if oldrepo in repospecs:
+              continue
+            if excluded(oldrepo):
+              continue
+            if fnmatch.fnmatch(oldrepo, repo):
+              if options.remove:
+                cmd = remcmd.replace('@fqrn@',oldrepo)
+                logmsg('Running ' + cmd)
+                if not options.dry_run:
+                  code = os.system(cmd)
+                  if code != 0:
+                    logmsg('Remove failed with exit code ' + hex(code))
+              else:
+                logmsg('WARNING: remove extra repository ' + oldrepo)
       else:
         # no wildcards, just see if it has to be excluded
         #  although that's rather unlikely
-        excluded = False
-        for exclude in excludes:
-          if fnmatch.fnmatch(repo, exclude):
-            excluded = True
-            break
-        if not excluded:
-          repospecs.append([repo, source, keypath])
+        if not excluded(repo):
+          repospecs[repo] = [source, keypath]
       # exclude this repo pattern from future matches
       excludes.append(repo)
   else:
     configfatal('unrecognized keyword: ' + key)
 
 if options.list:
-  for repo, source, keys in repospecs:
+  for repo, value in sorted(repospecs.iteritems()):
+    source = value[0]
     print source + '/cvmfs/' + repo
   sys.exit(0)
 
 
-if not options.dry_run:
-  print 'non dry-run not yet implemented'
-  sys.exit(1)
-
-
-for repo, url, keypath in repospecs:
+for repo, value in sorted(repospecs.iteritems()):
+  (url, keypath) = value
   serverconf = '/etc/cvmfs/repositories.d/' + repo + '/server.conf'
   replicaconf = '/etc/cvmfs/repositories.d/' + repo + '/replica.conf'
   if os.path.exists(serverconf):
@@ -173,7 +187,7 @@ for repo, url, keypath in repospecs:
       code = os.system(cmd)
       if code != 0:
         logmsg('Add failed with exit code ' + hex(code))
-        cmd = undo_command.replace('@fqrn@',repo)
+        cmd = remcmd.replace('@fqrn@',repo)
         logmsg('Running ' + cmd)
         code = os.system(cmd)
         if code != 0:
