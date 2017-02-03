@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.9
+Version: 2.10
 Release: 1
 Group: Applications/System
 License: BSD
@@ -9,6 +9,7 @@ Source: http://frontier.cern.ch/dist/cvmfs-hastratum1-%{version}.tgz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
 Requires: cvmfs-server
+Requires: python-anyjson
 
 %description
 %{summary}
@@ -38,6 +39,9 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Fri Feb 03 2017 Dave Dykstra <dwd@fnal.gov> 2.10-1
+- Add manage-replicas command
+
 * Tue Jan 17 2017 Dave Dykstra <dwd@fnal.gov> 2.9-1
 - Copy the reflog.chksum file to the backup machine in add-repository,
   when it is invoked without -h.
