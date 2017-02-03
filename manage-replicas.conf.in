@@ -12,7 +12,7 @@
 #       add-repository @fqrn@ @url@
 #   remcmd - the command to remove a repository. @fqrn@ will be replaced
 #     with the full qualified repository name.  Default is
-#       remove-repository @fqrn@
+#       remove-repository -f @fqrn@
 #   replist - the full URL referring to a CVMFS repositories.json file
 #     that will be used for discovering a list of repository replicas.
 #     For example,
