@@ -14,6 +14,8 @@ install:
 	install -D -m 555 cvmfsha-is-backup $(PREFIX)/usr/bin/cvmfsha-is-backup
 	install -D -m 555 watchq $(PREFIX)/usr/bin/watch-network-q
 	install -D -m 555 generate_replicas $(PREFIX)/usr/share/cvmfs-hastratum1/generate-osg-replicas
+	install -D -m 555 manage-replicas $(PREFIX)/usr/share/cvmfs-hastratum1/manage-replicas
+	install -D -m 644 manage-replicas.conf.in $(PREFIX)/etc/cvmfs/manage-replicas.conf.in
 	install -D -m 555 print_osg_repos $(PREFIX)/usr/share/cvmfs-hastratum1/print-osg-repos
 	install -D -m 644 ha.cf.in $(PREFIX)/etc/ha.d/ha.cf.in
 	install -D -m 644 haresources.in $(PREFIX)/etc/ha.d/haresources.in
