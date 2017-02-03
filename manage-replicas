@@ -140,7 +140,7 @@ for line in lines:
                   if code != 0:
                     logmsg('Remove failed with exit code ' + hex(code))
               else:
-                logmsg('WARNING: remove extra repository ' + oldrepo)
+                logmsg('WARNING: extra repository ' + oldrepo + ' matches managed repos ' + repo)
       else:
         # no wildcards, just see if it has to be excluded
         #  although that's rather unlikely
