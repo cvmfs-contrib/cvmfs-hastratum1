@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.10
+Version: 2.11
 Release: 1
 Group: Applications/System
 License: BSD
@@ -39,6 +39,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /usr/share/cvmfs-hastratum1/*
 
 %changelog
+* Fri Feb 06 2017 Dave Dykstra <dwd@fnal.gov> 2.11-1
+- Fix bugs in manage-replicas having to do with replacing source urls
+  when they change.
+
 * Fri Feb 03 2017 Dave Dykstra <dwd@fnal.gov> 2.10-1
 - Add manage-replicas command
 
