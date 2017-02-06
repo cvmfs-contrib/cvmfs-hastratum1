@@ -165,18 +165,30 @@ for repo, value in sorted(repospecs.iteritems()):
   if os.path.exists(serverconf):
     # Repo exists.  If there's no replica.conf, it may
     #   be blanked so skip that.
-    # If add command using the full url and it doesn't
+    # If replica.conf exists and the full url does not
     #   match what is in server.conf, edit server.conf.
-    if os.path.exists(replicaconf) and (addcmd.find('@url@') >= 0):
+    fullurl = url + '/cvmfs/' + repo
+    if os.path.exists(replicaconf):
       contents = open(serverconf).read()
-      if ('CVMFS_STRATUM0=' + url) not in contents:
-        start = contents.find('CVMFS_STRATUM0=')
-        if start > 0:
-          start += len('CVMFS_STRATUM0=')
-          end = contents.find('\n',start)
+      start = contents.find('CVMFS_STRATUM0=')
+      if start > 0:
+        start += len('CVMFS_STRATUM0=')
+        end = contents.find('\n', start)
+        if contents.find('{', start, end) >= 0:
+          #
+          # look past through the hyphen sign inside the curly brackets
+          # this is a convention in the cvmfs-hastratum1 package
+          start = contents.find('-', start, end)
+          if (start > 0):
+            start += 1
+      if start > 0:
+        if fullurl != contents[start:start+len(fullurl)]:
+          end = contents.find('}', start, end)
+          if end < 0:
+            end = contents.find('\n',start)
           if (end > 0):
-            contents = contents[:start] + url + contents[end:]
-            logmsg('Setting new url for ' + repo + ': ' + url)
+            contents = contents[:start] + fullurl + contents[end:]
+            logmsg('Setting new url for ' + repo + ': ' + fullurl)
             if not options.dry_run:
               open(serverconf, 'w').write(contents)
   else:
