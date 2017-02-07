@@ -35,8 +35,9 @@ case $THISHOST in
     *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
 esac
 
+echo "Output is directed to $VARLIB/restore-replicas.out"
 sed "s/@otherhost@/$OTHERHOST/" $SHARE/restore-replicas.conf.in >$VARLIB/restore-replicas.conf
-if ! $SHARE/manage-replicas -f $VARLIB/restore-replicas.conf; then
+if ! $SHARE/manage-replicas -f $VARLIB/restore-replicas.conf >>$VARLIB/restore-replicas.out 2>&1; then
   echo "Restoration of replicas failed" >&2
   exit 1
 fi
@@ -51,7 +52,7 @@ echo "remcmd true"
 # replace any existing addcmd/remcmd in case they're being set
 sed 's/^addcmd.*/addcmd true/;s/^remcmd.*/remcmd true/' /etc/cvmfs/manage-replicas.conf
 ) > $VARLIB/manage-replicas.conf
-if ! $SHARE/manage-replicas -f $VARLIB/manage-replicas.conf; then
+if ! $SHARE/manage-replicas -f $VARLIB/manage-replicas.conf >>$VARLIB/restore-replicas.out 2>&1; then
   echo "Restoration of replica source URLs failed" >&2
   exit 1
 fi
