@@ -32,3 +32,4 @@ install:
 	install -D -m 644 /dev/null $(PREFIX)/var/lib/cvmfs-hastratum1/restoration-date
 	install -D -m 644 /dev/null $(PREFIX)/var/lib/cvmfs-hastratum1/restore-replicas.conf
 	install -D -m 644 /dev/null $(PREFIX)/var/lib/cvmfs-hastratum1/manage-replicas.conf
+	install -D -m 644 /dev/null $(PREFIX)/var/lib/cvmfs-hastratum1/restore-replicas.out
