@@ -11,11 +11,12 @@ LOGF=/var/log/cvmfs/manage-replicas.log
 mkdir -p /var/run/cvmfs
 N=0
 while [ "$N" -lt "$MAXPARALLELMANAGE" ]; do
-  let N=$N+1
-  TMPFILE=/var/run/cvmfs/manage-replicas.log.$N
+  let FN=$N+1
+  TMPFILE=/var/run/cvmfs/manage-replicas.log.$FN
   if [ ! -f "$TMPFILE" ]; then
     break
   fi
+  N=$FN
 done
 if [ "$N" -eq "$MAXPARALLELMANAGE" ]; then
   echo "`date` skipping manage-replicas, $N already running" >>$LOGF
