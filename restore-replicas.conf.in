@@ -1,0 +1,7 @@
+# this file is used by restore-replicas, not intended to be hand-edited
+#
+addcmd  add-repository -H @fqrn@ @url@ @fqrn@/stage
+remcmd  remove-repository -f -h @fqrn@
+replist http://@otherhost@:8000/cvmfs/info/v1/repositories.json
+source  http://@otherhost@:8000
+repos   *

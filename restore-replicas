@@ -1,0 +1,52 @@
+#!/bin/bash
+# This is intended to be called from puppet on both the master and the
+#  primary machine.  Its purpose is to restore repository configurations
+#  when a backup machine is installed from scratch.
+# IMPORTANT NOTE: this will restore all the repositories from the primary
+#  machine, but if any repositories were added by hand (that is, outside
+#  of manage-replicas), then the source URL will be left pointing to the
+#  primary machine rather than the real stratum 0 it is supposed to come
+#  from.  Those would need to be separately restored with add-repository -H
+#  before calling this function.
+
+VARLIB=/var/lib/cvmfs-hastratum1
+SHARE=/usr/share/cvmfs-hastratum1
+
+DONEFILE=$VARLIB/restoration-date
+if [ -f $DONEFILE ]; then
+  exit
+fi
+
+if cvmfsha-is-master; then
+  exit
+fi
+
+. /etc/cvmfs/hastratum1.conf
+
+THISHOST="`uname -n`"
+case $THISHOST in
+    $HOST1) OTHERHOST=$HOST2;;
+    $HOST2) OTHERHOST=$HOST1;;
+    *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
+esac
+
+sed "s/@otherhost@/$OTHERHOST/" $SHARE/restore-replicas.conf.in >$VARLIB/restore-replicas.conf
+if ! $SHARE/manage-replicas -f $VARLIB/restore-replicas.conf; then
+  echo "Restoration of replicas failed" >&2
+  exit 1
+fi
+rm $VARLIB/restore-replicas.conf
+
+# fix the incorrect source URLs
+(
+echo "addcmd true"
+echo "remcmd true"
+cat /etc/cvmfs/manage-replicas.conf
+) > $VARLIB/manage-replicas.conf
+if ! $SHARE/manage-replicas -f $VARLIB/manage-replicas.conf; then
+  echo "Restoration of replica source URLs failed" >&2
+  exit 1
+fi
+rm $VARLIB/manage-replicas.conf
+
+date >$DONEFILE
