@@ -15,6 +15,7 @@ install:
 	install -D -m 555 watchq $(PREFIX)/usr/bin/watch-network-q
 	install -D -m 555 generate_replicas $(PREFIX)/usr/share/cvmfs-hastratum1/generate-osg-replicas
 	install -D -m 555 manage-replicas $(PREFIX)/usr/share/cvmfs-hastratum1/manage-replicas
+	install -D -m 555 manage-replicas-log $(PREFIX)/usr/share/cvmfs-hastratum1/manage-replicas-log
 	install -D -m 644 manage-replicas.conf.in $(PREFIX)/etc/cvmfs/manage-replicas.conf.in
 	install -D -m 555 restore-replicas $(PREFIX)/usr/share/cvmfs-hastratum1/restore-replicas
 	install -D -m 644 restore-replicas.conf.in $(PREFIX)/usr/share/cvmfs-hastratum1/restore-replicas.conf.in
@@ -27,5 +28,7 @@ install:
 	install -D -m 600 authkeys.in $(PREFIX)/etc/ha.d/authkeys.in
 	install -D -m 644 hastratum1.conf.in $(PREFIX)/etc/cvmfs/hastratum1.conf.in
 	install -D -m 444 hastratum1.logrotate $(PREFIX)/etc/logrotate.d/cvmfs-hastratum1
-	mkdir -p $(PREFIX)/var/lib/cvmfs-hastratum1
-	chmod 755 $(PREFIX)/var/lib/cvmfs-hastratum1
+	# ghost files
+	install -D -m 644 /dev/null $(PREFIX)/var/lib/cvmfs-hastratum1/restoration-date
+	install -D -m 644 /dev/null $(PREFIX)/var/lib/cvmfs-hastratum1/restore-replicas.conf
+	install -D -m 644 /dev/null $(PREFIX)/var/lib/cvmfs-hastratum1/manage-replicas.conf
