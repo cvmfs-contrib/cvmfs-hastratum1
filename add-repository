@@ -100,18 +100,13 @@ refreshcredentials
 
 if $CREATEREPO; then
     if [ -d "$REPOSTORE" ]; then
-	if $HALFONLY; then
-	    if [ -d "$REPOSTORE.ins" ]; then
-		echo "Both $REPOSTORE and $REPOSTORE.ins exist" >&2
-		exit 1
-	    fi
-	    # Old data left from previous install, save it for later
-	    echo "Saving $REPOSTORE to $REPOSTORE.ins"
-	    mv $REPOSTORE $REPOSTORE.ins
-	else
-	    echo "$REPOSTORE already exists" >&2
-	    exit 1
-	fi
+        if [ -d "$REPOSTORE.ins" ]; then
+            echo "Both $REPOSTORE and $REPOSTORE.ins exist" >&2
+            exit 1
+        fi
+        # Old data left from previous install, save it for later
+        echo "Saving $REPOSTORE to $REPOSTORE.ins"
+        mv $REPOSTORE $REPOSTORE.ins
     elif $ONLYIFDATA; then
         # This is used from generate_replicas to only add a repo config
         #  on one half if some data already existed.  If data does not
@@ -148,21 +143,21 @@ if $CREATEREPO; then
     fi
 
     mkdir -p $REPOSTORE/data $REPOSTORE/stage
-    ln -s ../data $REPOSTORE/stage/data
+    ln -sf ../data $REPOSTORE/stage/data
 
     if [ -n "$SHORTREPO" ]; then
-	ln -s $REPO $STORAGE/$SHORTREPO
+	ln -sf $REPO $STORAGE/$SHORTREPO
 	if ! $HALFONLY; then
-	    ssh $OTHERHOST ln -s $REPO $STORAGE/$SHORTREPO
+	    ssh $OTHERHOST ln -sf $REPO $STORAGE/$SHORTREPO
 	fi
     fi
 
     mkdir -p /srv/cvmfs
-    ln -s $REPOSTORE/stage /srv/cvmfs/$REPO
+    ln -sf $REPOSTORE/stage /srv/cvmfs/$REPO
     if [ ! -L /srv/cvmfs/info ]; then
         rm -rf /srv/cvmfs/info
         mkdir -p $STORAGE/info
-        ln -s $STORAGE/info /srv/cvmfs
+        ln -sf $STORAGE/info /srv/cvmfs
     fi
     if [ -z "$SOURCEREPO" ]; then
 	cvmfs_server add-replica -o root $URL/cvmfs/$REPO $KEYS
@@ -173,7 +168,7 @@ if $CREATEREPO; then
     if [ -L /var/spool/cvmfs/$REPO/tmp ]; then
 	# change this link so repos can be moved to different $SRV directories
 	rm -f /var/spool/cvmfs/$REPO/tmp
-	ln -s $STORAGE/$REPO/data/txn /var/spool/cvmfs/$REPO/tmp
+	ln -sf $STORAGE/$REPO/data/txn /var/spool/cvmfs/$REPO/tmp
     fi
     if [ "$SRV" != "/srv/cvmfs" ]; then
 	mkdir -p $SRV
@@ -201,7 +196,7 @@ if $CREATEREPO; then
     fi
 fi
 
-if $HALFONLY && [ -d $REPOSTORE.ins ]; then
+if [ -d $REPOSTORE.ins ]; then
     echo "Restoring $REPOSTORE.ins to $REPOSTORE"
     rm -rf $REPOSTORE
     mv $REPOSTORE.ins $REPOSTORE
@@ -209,7 +204,7 @@ if $HALFONLY && [ -d $REPOSTORE.ins ]; then
         echo "Removing $REPOSTORE/stage/.cvmfsreflog"
         rm $REPOSTORE/stage/.cvmfsreflog
     fi
-    if [ -f "$REPOSTORE/stage/.cvmfspublished" ]; then
+    if $HALFONLY && [ -f "$REPOSTORE/stage/.cvmfspublished" ]; then
 	# Initial snapshot done, assume the old data is reasonably up to date.
 	# Any that it is behind will be caught up at next update from master.
 	exit
