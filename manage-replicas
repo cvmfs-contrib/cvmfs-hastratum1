@@ -41,6 +41,9 @@ parser.add_option("-r", "--remove",
 parser.add_option("-c", "--continue-failed",
                   action="store_true", default=False,
                   help="Continue failed initial snapshots, replacing url with \'continue\'")
+parser.add_option("-d", "--repo-directory",
+                  metavar="dir", default='/srv/cvmfs',
+                  help="Directory to find repositories in (for -c option)")
 (options, args) = parser.parse_args(sys.argv)
 
 def logmsg(msg):
@@ -198,7 +201,7 @@ for repo, value in sorted(repospecs.iteritems()):
             if not options.dry_run:
               open(serverconf, 'w').write(contents)
       if options.continue_failed and \
-          not os.path.exists('/srv/cvmfs/' + repo + '/.cvmfs_last_snapshot') and \
+          not os.path.exists(options.repo_directory +'/' + repo + '/.cvmfs_last_snapshot') and \
           not os.path.exists('/var/spool/cvmfs/' + repo + '/is_snapshotting.lock') and \
           not os.path.exists('/var/spool/cvmfs/' + repo + '/is_updating.lock'):
         addrepo = True
