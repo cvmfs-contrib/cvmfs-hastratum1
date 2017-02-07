@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.12
+Version: 2.13
 Release: 1
 Group: Applications/System
 License: BSD
@@ -38,8 +38,15 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 /etc/logrotate.d/*
 /usr/share/cvmfs-hastratum1/*
 %dir /var/lib/cvmfs-hastratum1
+%ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Tue Feb 07 2017 Dave Dykstra <dwd@fnal.gov> 2.13-1
+- Add '--continue-failed' option to manage-replicas
+- Add manage-replicas-log function for handling logging of parallel
+  manage-replicas processes
+- Make restore-replicas a little more robust
+
 * Tue Feb 07 2017 Dave Dykstra <dwd@fnal.gov> 2.12-1
 - Add restore-replicas command for restoring the replica configurations
   on a freshly reinstalled backup machine.
