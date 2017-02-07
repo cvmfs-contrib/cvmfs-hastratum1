@@ -38,6 +38,9 @@ parser.add_option("-l", "--list",
 parser.add_option("-r", "--remove",
                   action="store_true", default=False,
                   help="Remove repositories that don't belong, don't just warn about them")
+parser.add_option("-c", "--continue-failed",
+                  action="store_true", default=False,
+                  help="Continue failed initial snapshots, replacing url with \'continue\'")
 (options, args) = parser.parse_args(sys.argv)
 
 def logmsg(msg):
@@ -162,7 +165,9 @@ for repo, value in sorted(repospecs.iteritems()):
   (url, keypath) = value
   serverconf = '/etc/cvmfs/repositories.d/' + repo + '/server.conf'
   replicaconf = '/etc/cvmfs/repositories.d/' + repo + '/replica.conf'
+  addrepo = True
   if os.path.exists(serverconf):
+    addrepo = False
     # Repo exists.  If there's no replica.conf, it may
     #   be blanked so skip that.
     # If replica.conf exists and the full url does not
@@ -191,8 +196,13 @@ for repo, value in sorted(repospecs.iteritems()):
             logmsg('Setting new url for ' + repo + ': ' + fullurl)
             if not options.dry_run:
               open(serverconf, 'w').write(contents)
-  else:
-    # repo does not exist.  add it.
+      if options.continue_failed and \
+          not os.path.exists('/srv/cvmfs/' + repo + '/.cvmfs_last_snapshot') and \
+          not os.path.exists('/var/spool/cvmfs/' + repo + '/is_snapshotting.lock') and \
+          not os.path.exists('/var/spool/cvmfs/' + repo + '/is_updating.lock'):
+        addrepo = True
+        url = 'continue'
+  if addrepo:
     cmd = addcmd.replace('@url@', url).replace('@fqrn@', repo).replace('@keypath@', keypath)
     logmsg('Running ' + cmd)
     if not options.dry_run:
