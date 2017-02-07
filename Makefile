@@ -16,6 +16,8 @@ install:
 	install -D -m 555 generate_replicas $(PREFIX)/usr/share/cvmfs-hastratum1/generate-osg-replicas
 	install -D -m 555 manage-replicas $(PREFIX)/usr/share/cvmfs-hastratum1/manage-replicas
 	install -D -m 644 manage-replicas.conf.in $(PREFIX)/etc/cvmfs/manage-replicas.conf.in
+	install -D -m 555 restore-replicas $(PREFIX)/usr/share/cvmfs-hastratum1/restore-replicas
+	install -D -m 644 restore-replicas.conf.in $(PREFIX)/usr/share/cvmfs-hastratum1/restore-replicas.conf.in
 	install -D -m 555 print_osg_repos $(PREFIX)/usr/share/cvmfs-hastratum1/print-osg-repos
 	install -D -m 644 ha.cf.in $(PREFIX)/etc/ha.d/ha.cf.in
 	install -D -m 644 haresources.in $(PREFIX)/etc/ha.d/haresources.in
@@ -25,3 +27,5 @@ install:
 	install -D -m 600 authkeys.in $(PREFIX)/etc/ha.d/authkeys.in
 	install -D -m 644 hastratum1.conf.in $(PREFIX)/etc/cvmfs/hastratum1.conf.in
 	install -D -m 444 hastratum1.logrotate $(PREFIX)/etc/logrotate.d/cvmfs-hastratum1
+	mkdir -p $(PREFIX)/var/lib/cvmfs-hastratum1
+	chmod 755 $(PREFIX)/var/lib/cvmfs-hastratum1
