@@ -47,10 +47,10 @@ rm $VARLIB/restore-replicas.conf
 (
 # override addcmd/remcmd because we only want to fix URLs, not add or remove
 # add new defaults in case there aren't any
-echo "addcmd true"
+echo "addcmd true : @fqrn@"
 echo "remcmd true"
 # replace any existing addcmd/remcmd in case they're being set
-sed 's/^addcmd.*/addcmd true/;s/^remcmd.*/remcmd true/' /etc/cvmfs/manage-replicas.conf
+sed 's/^addcmd.*/addcmd true : @fqrn@/;s/^remcmd.*/remcmd true/' /etc/cvmfs/manage-replicas.conf
 ) > $VARLIB/manage-replicas.conf
 if ! $SHARE/manage-replicas -f $VARLIB/manage-replicas.conf >>$VARLIB/restore-replicas.out 2>&1; then
   echo "Restoration of replica source URLs failed" >&2
