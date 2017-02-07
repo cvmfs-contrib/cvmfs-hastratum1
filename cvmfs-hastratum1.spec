@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.13
+Version: 2.14
 Release: 1
 Group: Applications/System
 License: BSD
@@ -41,6 +41,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Tue Feb 07 2017 Dave Dykstra <dwd@fnal.gov> 2.14-1
+- Allow add-repository to reuse old data even when not using -h
+- Redirect most of restore-replicas output to a file
+
 * Tue Feb 07 2017 Dave Dykstra <dwd@fnal.gov> 2.13-1
 - Add '--continue-failed' option to manage-replicas
 - Add manage-replicas-log function for handling logging of parallel
