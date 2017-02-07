@@ -106,8 +106,9 @@ for line in lines:
     except Exception, e:
       efatal('failure reading and/or decoding ' + value, e)
     replicalist = []
-    for rep in reps['replicas']:
-      replicalist.append(rep['name'])
+    for typ in ['replicas', 'repositories']:
+      for rep in reps[typ]:
+        replicalist.append(rep['name'])
   elif key == 'source':
     source = value
   elif key == 'keypath':
