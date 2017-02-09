@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.16
+Version: 2.17
 Release: 1
 Group: Applications/System
 License: BSD
@@ -41,6 +41,11 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Thu Feb 09 2017 Dave Dykstra <dwd@fnal.gov> 2.17-1
+- Change add-repository to clean up the repository storage if
+  add-replica fails.  This prevents a situation of confusion between
+  good old data and bad new data.
+
 * Thu Feb 09 2017 Dave Dykstra <dwd@fnal.gov> 2.16-1
 - Make sure that /usr/sbin is in the PATH inside manage-replicas-log
   and restore-replicas. The former is typically run from cron and the
