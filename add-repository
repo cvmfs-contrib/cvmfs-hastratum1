@@ -164,8 +164,13 @@ if $CREATEREPO; then
         else
             cvmfs_server add-replica -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
         fi; then
+        set +x
         echo "add-replica failed, removing $REPOSTORE"
         rm -rf $REPOSTORE
+        if [ -d $REPOSTORE.ins ]; then
+          echo "and restoring $REPOSTORE.ins to $REPOSTORE"
+          mv $REPOSTORE.ins $REPOSTORE
+        fi
         exit 1
     fi
     rm -f /etc/httpd/conf.d/cvmfs.$REPO.conf
