@@ -35,6 +35,7 @@ case $THISHOST in
     *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
 esac
 
+PATH=$PATH:/usr/sbin
 echo "Output is directed to $VARLIB/restore-replicas.out"
 sed "s/@otherhost@/$OTHERHOST/" $SHARE/restore-replicas.conf.in >$VARLIB/restore-replicas.conf
 if ! $SHARE/manage-replicas -f $VARLIB/restore-replicas.conf >>$VARLIB/restore-replicas.out 2>&1; then

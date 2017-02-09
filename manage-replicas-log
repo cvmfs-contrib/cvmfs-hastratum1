@@ -7,6 +7,7 @@ MAXPARALLELPULL=4
 
 MAXPARALLELMANAGE=${MAXPARALLELMANAGE:-$MAXPARALLELPULL}
 
+PATH=$PATH:/usr/sbin
 LOGF=/var/log/cvmfs/manage-replicas.log
 mkdir -p /var/run/cvmfs
 N=0
