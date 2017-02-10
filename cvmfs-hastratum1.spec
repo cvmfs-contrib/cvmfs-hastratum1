@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.17
+Version: 2.18
 Release: 1
 Group: Applications/System
 License: BSD
@@ -41,6 +41,11 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Thu Feb 09 2017 Dave Dykstra <dwd@fnal.gov> 2.18-1
+- Change add-repository to make an updating lock while doing the rsync,
+  so manage-replicas won't try to start another add-repository during
+  that time.
+
 * Thu Feb 09 2017 Dave Dykstra <dwd@fnal.gov> 2.17-1
 - Change add-repository to clean up the repository storage if
   add-replica fails.  This prevents a situation of confusion between
