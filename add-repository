@@ -160,9 +160,9 @@ if $CREATEREPO; then
         ln -sf $STORAGE/info /srv/cvmfs
     fi
     if ! if [ -z "$SOURCEREPO" ]; then
-            cvmfs_server add-replica -o root $URL/cvmfs/$REPO $KEYS
+            cvmfs_server add-replica -p -o root $URL/cvmfs/$REPO $KEYS
         else
-            cvmfs_server add-replica -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
+            cvmfs_server add-replica -p -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
         fi; then
         set +x
         echo "add-replica failed, removing $REPOSTORE"
@@ -173,7 +173,6 @@ if $CREATEREPO; then
         fi
         exit 1
     fi
-    rm -f /etc/httpd/conf.d/cvmfs.$REPO.conf
     if [ -L /var/spool/cvmfs/$REPO/tmp ]; then
 	# change this link so repos can be moved to different $SRV directories
 	rm -f /var/spool/cvmfs/$REPO/tmp
