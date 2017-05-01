@@ -11,7 +11,9 @@
 #     and @keypath@ will be replaced with a given keypath.  Default is
 #       add-repository @fqrn@ @url@
 #   remcmd - the command to remove a repository. @fqrn@ will be replaced
-#     with the full qualified repository name.  Default is
+#     with the full qualified repository name.  This is used when an
+#     addcmd fails and the --continue-failed option is not given, or
+#     when the --remove option is given.  Default is
 #       remove-repository -f @fqrn@
 #   replist - the full URL referring to a CVMFS repositories.json file
 #     that will be used for discovering a list of repository replicas.

@@ -213,10 +213,11 @@ for repo, value in sorted(repospecs.iteritems()):
       code = os.system(cmd)
       if code != 0:
         logmsg('Add failed with exit code ' + hex(code))
-        cmd = remcmd.replace('@fqrn@',repo)
-        logmsg('Running ' + cmd)
-        code = os.system(cmd)
-        if code != 0:
-          logmsg('Undo failed with exit code ' + hex(code))
+        if not options.continue_failed:
+          cmd = remcmd.replace('@fqrn@',repo)
+          logmsg('Running ' + cmd)
+          code = os.system(cmd)
+          if code != 0:
+            logmsg('Undo failed with exit code ' + hex(code))
 
 logmsg('Finished')
