@@ -20,6 +20,7 @@ usage()
     echo "Usage: add-repository [-h|-H] fqrn {continue|http://stratum-zero-fqdn:port [sourcefqrn]}" >&2
     echo "  -h only creates the repository on this half of an HA pair" >&2
     echo "  -H is like -h but only creates if data already present" >&2
+    echo "     either on the current host or the partner host" >&2
     echo "  If second required parameter is "continue", continue from a failed snapshot" >&2
     exit 1
 }
@@ -108,11 +109,15 @@ if $CREATEREPO; then
         echo "Saving $REPOSTORE to $REPOSTORE.ins"
         mv $REPOSTORE $REPOSTORE.ins
     elif $ONLYIFDATA; then
-        # This is used from generate_replicas to only add a repo config
-        #  on one half if some data already existed.  If data does not
-        #  yet exist, wait for the master's generate_replicas to add it.
-        echo "$REPOSTORE not previously present, skipping" >&2
-        exit 0
+        # This is used from manage-replicas to only add a repo config on one
+        #  half if some data already existed.  If data does not yet exist on
+        #  either half, wait for the master's manage-replicas to add it.
+        if ! ssh $OTHERHOST test -f $REPOSTORE/.cvmfspublished; then
+            echo "$REPOSTORE not present here and $REPOSTORE/.cvmfspublished not on $OTHERHOST, skipping" >&2
+            exit 0
+        fi
+        echo "Read snapshot from $OTHERHOST"
+        export CVMFS_SERVER_OVERRIDE=http://$OTHERHOST:8080/cvmfs/$REPO/stage
     fi
 else
     if [ ! -d "$REPOSTORE" ]; then
