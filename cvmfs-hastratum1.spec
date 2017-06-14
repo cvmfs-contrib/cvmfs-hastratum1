@@ -41,6 +41,11 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Mon Jun 13 2017 Dave Dykstra <dwd@fnal.gov> 2.20-1
+- Change add-repository -H to also go ahead if an initial snapshot
+  exists on the partner, to support the case of bootstrapping a
+  completely wiped backup machine.  In that case, have it snapshot
+  from the partner.
 - Remove generate_replicas
 
 * Mon May 01 2017 Dave Dykstra <dwd@fnal.gov> 2.19-1
