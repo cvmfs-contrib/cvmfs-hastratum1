@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.20
+Version: 2.21
 Release: 1
 Group: Applications/System
 License: BSD
@@ -41,6 +41,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Mon May 13 2019 Dave Dykstra <dwd@fnal.gov> 2.21-1
+- Apply addcmd and remcmd sequentially in manage-replicas, so different
+  values can be used by different repositories.
+
 * Mon Jun 13 2017 Dave Dykstra <dwd@fnal.gov> 2.20-1
 - Change add-repository -H to also go ahead if an initial snapshot
   exists on the partner, to support the case of bootstrapping a
