@@ -6,7 +6,8 @@ Version: 2.21
 Release: %{release_prefix}%{?dist}
 Group: Applications/System
 License: BSD
-Source: http://frontier.cern.ch/dist/cvmfs-hastratum1-%{version}.tgz
+# https://github.com/cvmfs-contrib/cvmfs-hastratum1/archive/v%{version}.tar.gz
+Source: cvmfs-hastratum1-%{version}.tgz
 
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
