@@ -34,4 +34,6 @@
 #     warning will be printed to remove it or the replica will be
 #     automatically removed, depending on a manage_replicas run-time
 #     option.  Multiple names or patterns can be listed, separated by
-#     whitespace.
+#     whitespace.  Note that if there is a 'repos *' it will effectively
+#     exclude all repositories from later 'repos' lines, so it should
+#     be last in the file.
