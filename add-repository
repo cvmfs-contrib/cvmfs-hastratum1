@@ -245,10 +245,8 @@ if [ -f $LOCKFILE ]; then
     fi
     rm -f $LOCKFILE
 fi
-# arcfour cipher greatly reduces ssh CPU, and so increases throughput
-#  when CPU is the bottleneck
 # ignore differences in modification time
-rsync -a --size-only -e 'ssh -c arcfour' $REPOSTORE/ $OTHERHOST:$REPOSTORE &
+rsync -a --size-only $REPOSTORE/ $OTHERHOST:$REPOSTORE &
 RSYNCPID=$!
 trap "rm -f $LOCKFILE" 0
 # this prevents manage-replicas from trying to continue this repo again
