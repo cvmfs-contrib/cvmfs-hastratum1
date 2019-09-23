@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.21
+Version: 2.22
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,6 +44,9 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Mon Sep 23 2019 Dave Dykstra <dwd@fnal.gov> 2.22-1
+- Remve use of the ssh arcfour cipher; it doesn't work on el7.
+
 * Mon May 13 2019 Dave Dykstra <dwd@fnal.gov> 2.21-1
 - Apply addcmd and remcmd sequentially in manage-replicas, so different
   values can be used by different repositories.
