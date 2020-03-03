@@ -68,6 +68,7 @@ DOMAIN="${REPO#*.}"
 if [ -f /etc/cvmfs/keys/$REPO.pub ]; then
     KEYS="/etc/cvmfs/keys/$REPO.pub"
 elif [ -d /etc/cvmfs/keys/$DOMAIN ]; then
+    KEYS="/etc/cvmfs/keys/$DOMAIN"
     KEYS="`echo /etc/cvmfs/keys/$DOMAIN/*.pub|tr ' ' ':'`"
 elif [ -f /etc/cvmfs/keys/$DOMAIN.pub ]; then
     KEYS="`echo /etc/cvmfs/keys/*$DOMAIN.pub|tr ' ' ':'`"
@@ -100,6 +101,10 @@ set -e
 refreshcredentials
 
 if $CREATEREPO; then
+    if [ -d /etc/cvmfs/repositories.d/$REPO ]; then
+        echo "/etc/cvmfs/repositories.d/$REPO already exists" >&2
+        exit 1
+    fi
     if [ -d "$REPOSTORE" ]; then
         if [ -d "$REPOSTORE.ins" ]; then
             echo "Both $REPOSTORE and $REPOSTORE.ins exist" >&2
@@ -170,7 +175,8 @@ if $CREATEREPO; then
             cvmfs_server add-replica -p -o root -n $REPO $URL/cvmfs/$SOURCEREPO $KEYS
         fi; then
         set +x
-        echo "add-replica failed, removing $REPOSTORE"
+        echo "add-replica failed, removing repository and $REPOSTORE"
+        cvmfs_server rmfs -f $REPO || true
         rm -rf $REPOSTORE
         if [ -d $REPOSTORE.ins ]; then
           echo "and restoring $REPOSTORE.ins to $REPOSTORE"
