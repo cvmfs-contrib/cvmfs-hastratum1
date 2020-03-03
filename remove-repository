@@ -9,16 +9,19 @@ usage()
 {
     echo "Usage: remove-repository [-f] [-h] fqrn" >&2
     echo " -f: force removal, don't ask for confirmation" >&2
-    echo " -h: remove only on this half of an HA pair, and leave data" >&2
+    echo " -h: remove only on this half of an HA pair" >&2
+    echo " -H; like -h, but leave data" >&2
     exit 1
 }
 
 DONTFORCE=true
 HALFONLY=false
-while getopts :fh OPT; do
+LEAVEDATA=false
+while getopts :fhH OPT; do
     case $OPT in
         f) DONTFORCE=false;;
         h) HALFONLY=true;;
+        H) HALFONLY=true; LEAVEDATA=true;;
         \?) echo "Invalid option: -$OPTARG" >&2
             usage;;
     esac
@@ -87,6 +90,8 @@ if ! $HALFONLY; then
         rm -f $STORAGE/$SHORTREPO
     fi
     ssh $OTHERHOST rm -rf $STORAGE/$REPO
+fi
+if ! $LEAVEDATA; then
     rm -rf $STORAGE/$REPO
 fi
 if [ "`echo $STORAGE/info/*`" != "$STORAGE/info/*" ]; then
