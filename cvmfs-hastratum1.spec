@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.22
+Version: 2.23
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,8 +44,16 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Tue Mar 03 2020 Dave Dykstra <dwd@fnal.gov> 2.23-1
+- Change add-repository to cleanup configuration if add-replica fails,
+  and to abort early if the repo configuration already exists.
+- Change add-repository to explicitly list all .pub keys in a keys
+  directory instead of listing the directory.
+- Change remove-repository -h to remove data, and add -H to be like -h
+  used to be.
+
 * Mon Sep 23 2019 Dave Dykstra <dwd@fnal.gov> 2.22-1
-- Remve use of the ssh arcfour cipher; it doesn't work on el7.
+- Remove use of the ssh arcfour cipher; it doesn't work on el7.
 
 * Mon May 13 2019 Dave Dykstra <dwd@fnal.gov> 2.21-1
 - Apply addcmd and remcmd sequentially in manage-replicas, so different
