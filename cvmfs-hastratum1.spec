@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.23
+Version: 2.24
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,6 +44,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Wed Mar 17 2020 Dave Dykstra <dwd@fnal.gov> 2.24-1
+- Change the default port used for apache between the two machines to
+  8081.  May be overridden by setting HTTPPORT in hastratum1.conf.
+
 * Tue Mar 03 2020 Dave Dykstra <dwd@fnal.gov> 2.23-1
 - Change add-repository to cleanup configuration if add-replica fails,
   and to abort early if the repo configuration already exists.
