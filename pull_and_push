@@ -26,7 +26,8 @@
 # Originally written by Dave Dykstra 29 March 2013
 # Adapted for cvmfs-server 2.1 15 July 2013
 # Adapted to use cvmfs_server snapshot instead of rsync for the main
-#   replication 4 September 2014.  Assumes apache is listening on port 8080.
+#   replication 4 September 2014.  Assumes apache is listening on port
+#   ${HTTPPORT:-8081}.
 # Adapted for cvmfs-server 2.2 and parallel updates 24 March 2016.
 
 MAXPARALLELPULL=4
@@ -57,6 +58,8 @@ case $THISHOST in
     $HOST2) OTHERHOST=$HOST1;;
     *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
 esac
+
+HTTPPORT=${HTTPPORT:-8081}
 
 if [ ! -d "$SRV" ]; then
     echo "$SRV does not exist, nothing to do" >&2
@@ -245,7 +248,7 @@ echo "Pulling finished at `date`" >&2
     #  middle of a push.
     # Need to first make sure other side has initial snapshot, to avoid
     #  waiting long if the other side is getting re-installed from scratch.
-    if ssh -o ConnectTimeout=10 $OTHERHOST "if [ ! -f $STOREDIR/.cvmfs_last_snapshot ]; then echo "Initial snapshot not finished, skipping"; exit 1; fi;REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO" || \
+    if ssh -o ConnectTimeout=10 $OTHERHOST "if [ ! -f $STOREDIR/.cvmfs_last_snapshot ]; then echo "Initial snapshot not finished, skipping"; exit 1; fi;REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:$HTTPPORT/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO" || \
 		[ -f /etc/cvmfs/runstandalone ]; then
 	SERVED="`cd $STOREDIR;cd $(/bin/pwd)/..;pwd`"
 	if [ ! -d "$SERVED" ]; then

@@ -94,6 +94,8 @@ case $THISHOST in
     *) echo "Not running on $HOST1 or $HOST2" >&2; exit 1;;
 esac
 
+HTTPPORT=${HTTPPORT:-8081}
+
 REPOSTORE=$STORAGE/$REPO
 
 set -e
@@ -122,7 +124,7 @@ if $CREATEREPO; then
             exit 0
         fi
         echo "Read snapshot from $OTHERHOST"
-        export CVMFS_SERVER_OVERRIDE=http://$OTHERHOST:8080/cvmfs/$REPO/stage
+        export CVMFS_SERVER_OVERRIDE=http://$OTHERHOST:$HTTPPORT/cvmfs/$REPO/stage
     fi
 else
     if [ ! -d "$REPOSTORE" ]; then
@@ -241,7 +243,7 @@ fi
 refreshcredentials
 
 # comment out because rsync gets better throughput
-#ssh $OTHERHOST CVMFS_SERVER_OVERRIDE=http://$THISHOST:8080/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO
+#ssh $OTHERHOST CVMFS_SERVER_OVERRIDE=http://$THISHOST:$HTTPPORT/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO
 
 LOCKFILE=/var/spool/cvmfs/$REPO/is_updating.lock
 if [ -f $LOCKFILE ]; then
