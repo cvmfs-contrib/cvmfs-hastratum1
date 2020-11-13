@@ -187,7 +187,7 @@ rm -f $TMPLOCK
 if ! $GOTONE; then
   if $ABORT; then
         echo;echo "Abort not needed at `date` because update not in progress"
-        exit 1
+        exit
     fi
     echo;echo "Cannot create $LOCKBASE.* at `date`, already created by running process(es)$OTHERPIDS"
     exit 1
