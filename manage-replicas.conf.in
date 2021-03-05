@@ -11,9 +11,7 @@
 #     and @keypath@ will be replaced with a given keypath.  Default is
 #       add-repository @fqrn@ @url@
 #   remcmd - the command to remove a repository. @fqrn@ will be replaced
-#     with the full qualified repository name.  This is used when an
-#     addcmd fails and the --continue-failed option is not given, or
-#     when the --remove option is given.  Default is
+#     with the full qualified repository name.  Default is
 #       remove-repository -f @fqrn@
 #   replist - the full URL referring to a CVMFS repositories.json file
 #     that will be used for discovering a list of repository replicas.
@@ -23,6 +21,14 @@
 #       http://cvmfs-stratum-zero.cern.ch:8000
 #   keypath - a colon separated list of paths to keys to supply as the
 #     @keypath@ in subsequent repository additions.
+#   keysource - github source for downloading missing domain keys.  The
+#      format is organization/reponame/branch/path.  For example
+#       cvmfs-contrib/config-repo/master/etc/cvmfs/keys
+#      The corresponding directory may contain either <domain>.pub key
+#      files or a <domain> directory containing .pub key files or a
+#      mixture of both.  Keys will be downloaded to the corresponding
+#      place in /etc/cvmfs/keys.  Sets @keypath@ with path to the
+#      downloaded keys or appends to it if the keypath option is set.
 #   exclude - repository name or names to exclude from subsequent
 #     managed repos.  May contain shell wildcards or be separated by
 #     whitespace.
@@ -34,6 +40,5 @@
 #     warning will be printed to remove it or the replica will be
 #     automatically removed, depending on a manage_replicas run-time
 #     option.  Multiple names or patterns can be listed, separated by
-#     whitespace.  Note that if there is a 'repos *' it will effectively
-#     exclude all repositories from later 'repos' lines, so it should
-#     be last in the file.
+#     whitespace.
+
