@@ -56,7 +56,7 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 - treat an unneeded pull_and_push ABORT as a success, not an error
 - updated manage-replicas to version 1.3, support keysource option
 
-* Wed Mar 17 2020 Dave Dykstra <dwd@fnal.gov> 2.24-1
+* Wed Mar 18 2020 Dave Dykstra <dwd@fnal.gov> 2.24-1
 - Change the default port used for apache between the two machines to
   8081.  May be overridden by setting HTTPPORT in hastratum1.conf.
 
@@ -76,7 +76,7 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
   values can be used by different repositories.
 - Make buildable on OpenSUSE Build System
 
-* Mon Jun 13 2017 Dave Dykstra <dwd@fnal.gov> 2.20-1
+* Mon Jun 12 2017 Dave Dykstra <dwd@fnal.gov> 2.20-1
 - Change add-repository -H to also go ahead if an initial snapshot
   exists on the partner, to support the case of bootstrapping a
   completely wiped backup machine.  In that case, have it snapshot
@@ -127,7 +127,7 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 - Add restore-replicas command for restoring the replica configurations
   on a freshly reinstalled backup machine.
 
-* Fri Feb 06 2017 Dave Dykstra <dwd@fnal.gov> 2.11-1
+* Mon Feb 06 2017 Dave Dykstra <dwd@fnal.gov> 2.11-1
 - Fix bugs in manage-replicas having to do with replacing source urls
   when they change.
 
@@ -160,7 +160,7 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 - Add -t option to generate_replicas to only generate a short list of
   test replicas rather than the whole list.
 
-* Fri May 25 2016 Dave Dykstra <dwd@fnal.gov> 2.4-1
+* Wed May 25 2016 Dave Dykstra <dwd@fnal.gov> 2.4-1
 - Compress log files
 
 * Fri Mar 25 2016 Dave Dykstra <dwd@fnal.gov> 2.3-1
@@ -244,5 +244,5 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
     remove-repository, and set a PATH in pull_and_push to find kinit
     (since cron doesn't set the PATH).
 
-* Thu Oct 10 2014 Dave Dykstra <dwd@fnal.gov> 1.0-1
+* Fri Oct 10 2014 Dave Dykstra <dwd@fnal.gov> 1.0-1
 - Initial release
