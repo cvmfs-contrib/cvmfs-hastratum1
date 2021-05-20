@@ -232,6 +232,16 @@ if [ -d $REPOSTORE.ins ]; then
     fi
 fi
 
+# note snapshot in progress for monitoring
+ISSHOTTING=$REPOSTORE/.cvmfs_is_snapshotting
+date >$ISSHOTTING
+DONECMD="rm -f $ISSHOTTING"
+if ! $HALFONLY; then
+    scp $ISSHOTTING $OTHERHOST:$ISSHOTTING
+    DONECMD="$DONECMD; ssh $OTHERHOST rm -f $ISSHOTTING"
+fi
+trap "$DONECMD" 0
+
 # do initial snapshot
 cvmfs_server snapshot -t $REPO
 
@@ -256,7 +266,8 @@ fi
 # ignore differences in modification time
 rsync -a --size-only $REPOSTORE/ $OTHERHOST:$REPOSTORE &
 RSYNCPID=$!
-trap "rm -f $LOCKFILE" 0
+DONECMD="rm -f $LOCKFILE; $DONECMD"
+trap "$DONECMD" 0
 # this prevents manage-replicas from trying to continue this repo again
 echo $RSYNCPID >$LOCKFILE
 wait
