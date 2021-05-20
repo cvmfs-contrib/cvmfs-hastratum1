@@ -238,7 +238,7 @@ date >$ISSHOTTING
 DONECMD="rm -f $ISSHOTTING"
 if ! $HALFONLY; then
     scp $ISSHOTTING $OTHERHOST:$ISSHOTTING
-    DONECMD="$DONECMD; ssh $OTHERHOST rm -f $ISSHOTTING"
+    DONECMD="$DONECMD; refreshcredentials; ssh $OTHERHOST rm -f $ISSHOTTING"
 fi
 trap "$DONECMD" 0
 
