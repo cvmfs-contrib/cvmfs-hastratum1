@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.27
+Version: 2.28
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,6 +44,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Thu May 20 2021 Dave Dykstra <dwd@fnal.gov> 2.28-1
+- make .cvmfs_is_snapshotting files publicly viewable during add-repository
+  because cvmfs-servermon expects it.
+
 * Wed Mar 10 2021 Dave Dykstra <dwd@fnal.gov> 2.27-1
 - update to manage-replicas version 1.5 to remove extra blank on the
   end of .pub filenames.
