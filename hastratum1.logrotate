@@ -3,5 +3,5 @@
     rotate 5
     compress
     delaycompress
-    dataext
+    dateext
 }
