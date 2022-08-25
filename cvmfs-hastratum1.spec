@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.30
+Version: 2.31
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,6 +44,9 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Thu Aug 25 2021 Dave Dykstra <dwd@fnal.gov> 2.31-1
+- Change typo keyword "dataext" in the logrotate config to "dateext".
+
 * Tue Oct 12 2021 Dave Dykstra <dwd@fnal.gov> 2.30-1
 - Add "delaycompress" to the logrotate config so that something logs like
   gc which to write for a long time to their output don't get cut off.
