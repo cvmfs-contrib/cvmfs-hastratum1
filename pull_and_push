@@ -248,8 +248,8 @@ echo "Pulling finished at `date`" >&2
     #  middle of a push.
     # Need to first make sure other side has initial snapshot, to avoid
     #  waiting long if the other side is getting re-installed from scratch.
-    if ssh -o ConnectTimeout=10 $OTHERHOST "if [ ! -f $STOREDIR/.cvmfs_last_snapshot ]; then echo "Initial snapshot not finished, skipping"; exit 1; fi;REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:$HTTPPORT/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO" || \
-		[ -f /etc/cvmfs/runstandalone ]; then
+    if [ -f /etc/cvmfs/runstandalone ] ||\
+    ssh -o ConnectTimeout=10 $OTHERHOST "if [ ! -f $STOREDIR/.cvmfs_last_snapshot ]; then echo "Initial snapshot not finished, skipping"; exit 1; fi;REPO=$REPO;$FIXS1STAGE;ulimit -n $MAXFDS;CVMFS_SERVER_OVERRIDE=http://$THISHOST:$HTTPPORT/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO"; then
 	SERVED="`cd $STOREDIR;cd $(/bin/pwd)/..;pwd`"
 	if [ ! -d "$SERVED" ]; then
 	    echo "$SERVED" does not exist!
