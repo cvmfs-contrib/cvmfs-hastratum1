@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.31
+Version: 2.32
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,6 +44,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Thu May 18 2023 Dave Dykstra <dwd@fnal.gov> 2.32-1
+- Sync up manage-replicas with cvmfs-manage-replicas-1.7, fixing key
+  storage for python3.
+
 * Thu Aug 25 2022 Dave Dykstra <dwd@fnal.gov> 2.31-1
 - Change typo keyword "dataext" in the logrotate config to "dateext".
 
