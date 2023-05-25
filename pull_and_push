@@ -92,8 +92,11 @@ else
         done|sort -n|cut -d: -f2)"
 fi
 
-MAXFDS=16384
-ulimit -n $MAXFDS
+MAXFDS="`ulimit -n`"
+if [ $MAXFDS -lt 16384 ]; then
+    MAXFDS=16384
+    ulimit -n $MAXFDS
+fi
 
 if [ -f /etc/krb5.keytab ]; then
     export KRB5CCNAME=FILE:/tmp/krb5cc_root_hastratum1
