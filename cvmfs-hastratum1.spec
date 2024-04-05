@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.33
+Version: 2.34
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -12,6 +12,7 @@ Source: cvmfs-hastratum1-%{version}.tgz
 BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 BuildArch: noarch
 Requires: cvmfs-server
+Requires: cvmfs-manage-replicas
 Requires: python3-lxml
 
 %description
@@ -44,6 +45,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Fri Apr  5 2024 Dave Dykstra <dwd@fnal.gov> 2.34-1
+- Require the cvmfs-manage-replicas rpm instead of copying the manage-replicas
+  python program here.
+
 * Thu May 25 2023 Dave Dykstra <dwd@fnal.gov> 2.33-1
 - Change the ulimit -n setting in pull_and_push to only increase to 16384
   and to not decrease if the default is higher.

@@ -25,5 +25,5 @@ if [ "$N" -eq "$MAXPARALLELMANAGE" ]; then
 fi
 trap "rm -f $TMPFILE" 0
 echo "`date` Sending output to $TMPFILE" >>$LOGF
-/usr/share/cvmfs-hastratum1/manage-replicas -d $STORAGE "$@" >$TMPFILE 2>&1
+/usr/sbin/manage-replicas -d $STORAGE "$@" >$TMPFILE 2>&1
 cat $TMPFILE >>$LOGF
