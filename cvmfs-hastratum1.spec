@@ -45,6 +45,18 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Fri Apr 12 2024 Dave Dykstra <dwd@fnal.gov> 2.35-1
+- Change pull_and_push to check for .cvmfs_last_snapshot at the top level
+  instead of where cvmfs creates it, to make sure the initial push is 
+  finished before attempting to update it.  That was causing the removal
+  of is_updating.lock, resulting in manage-replicas trying to continue
+  the adding of a repository, resulting in multiple pushes happening in
+  parallel for the same repository.
+- Change the locking mechanism in add-repository for the is_updating.lock
+  file to use flock the same way that cvmfs_server does now.  That way 
+  even if cvmfs_server snapshot -t is run it will think that another
+  snapshot is in progress and not do anything.
+
 * Fri Apr  5 2024 Dave Dykstra <dwd@fnal.gov> 2.34-1
 - Require the cvmfs-manage-replicas rpm instead of copying the manage-replicas
   python program here.

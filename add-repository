@@ -250,27 +250,25 @@ if $HALFONLY; then
     exit
 fi
 
+# Holding this lock prevents manage-replicas from trying to continue this
+# repo again and prevents another snapshot from happening
+LOCKFILE=/var/spool/cvmfs/$REPO/is_updating.lock
+exec 9<>$LOCKFILE
+if ! flock -n 9; then
+    echo "Another process is updating this repo, exiting" >&2
+    exit 1
+fi
+DONECMD="rm -f $LOCKFILE; $DONECMD"
+trap "$DONECMD" 0
+
+date
 refreshcredentials
 
 # comment out because rsync gets better throughput
 #ssh $OTHERHOST CVMFS_SERVER_OVERRIDE=http://$THISHOST:$HTTPPORT/cvmfs/$REPO/stage cvmfs_server snapshot -t $REPO
 
-LOCKFILE=/var/spool/cvmfs/$REPO/is_updating.lock
-if [ -f $LOCKFILE ]; then
-    if kill -0 `cat $LOCKFILE`; then
-        echo "Another process is updating this repo, exiting" >&2
-        exit 1
-    fi
-    rm -f $LOCKFILE
-fi
 # ignore differences in modification time
-rsync -a --size-only $REPOSTORE/ $OTHERHOST:$REPOSTORE &
-RSYNCPID=$!
-DONECMD="rm -f $LOCKFILE; $DONECMD"
-trap "$DONECMD" 0
-# this prevents manage-replicas from trying to continue this repo again
-echo $RSYNCPID >$LOCKFILE
-wait
+rsync -a --size-only $REPOSTORE/ $OTHERHOST:$REPOSTORE
 
 refreshcredentials
 

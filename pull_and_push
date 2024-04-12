@@ -222,7 +222,7 @@ for REPO in $REPOS; do
     if [ -z "$STOREDIR" ]; then
 	continue
     fi
-    if [ ! -f $STOREDIR/.cvmfs_last_snapshot ]; then
+    if [ ! -f $STORAGE/$REPO/.cvmfs_last_snapshot ]; then
 	echo >&2
 	echo "Initial snapshot of $REPO is not finished, skipping" >&2
 	continue
