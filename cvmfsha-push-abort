@@ -1,0 +1,56 @@
+#!/bin/sh
+# abort cvmfsha-pull-and-push updates in progress, if any, when shutting down
+# complies with the ocf standard for scripts used by pacemaker.
+# Dave Dykstra, 25 July 2013
+
+OCF_ROOT=${OCF_ROOT:-/usr/lib/ocf}
+OCF_FUNCTIONS_DIR=${OCF_FUNCTIONS_DIR:-${OCF_ROOT}/lib/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/ocf-shellfuncs
+
+meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="cvmfsha-push-abort">
+<version>1.0</version>
+
+<longdesc lang="en">
+This is the cvmfsha-push-abort Resource Agent. It aborts cvmfsha-pull-and-push
+when stopping.
+</longdesc>
+<shortdesc lang="en">cvmfsha-push-abort resource agent</shortdesc>
+
+<actions>
+<action name="start"        timeout="5s" />
+<action name="stop"         timeout="60s" />
+<action name="meta-data"    timeout="5s" />
+</actions>
+</resource-agent>
+END
+}
+
+RUNNINGFILE=/var/run/resource-agents/cvmfsha-push-abort.running
+case "$1" in
+    monitor|status)
+	if [ -f $RUNNINGFILE ]; then
+	    exit $OCF_SUCCESS
+	else
+	    exit $OCF_NOT_RUNNING
+	fi
+	;;
+    start)
+        touch $RUNNINGFILE
+        exit $OCF_SUCCESS;;
+    stop)
+        rm -f $RUNNINGFILE
+        if cvmfsha-pull-and-push ABORT; then
+            exit $OCF_SUCCESS
+        fi
+        exit $OCF_ERR_GENERIC
+        ;;
+    meta-data)
+        meta_data
+        exit $OCF_SUCCESS
+        ;;
+    *) exit $OCF_ERR_UNIMPLEMENTED
+esac

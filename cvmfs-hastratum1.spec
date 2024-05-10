@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 2.35
+Version: 3.0
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -36,8 +36,7 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %files
 /usr/bin/*
 /usr/sbin/*
-/etc/ha.d/*.in
-/etc/ha.d/resource.d/*
+/usr/lib/ocf/resource.d/*
 /etc/cvmfs/*
 /etc/logrotate.d/*
 /usr/share/cvmfs-hastratum1/*
@@ -45,6 +44,9 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Fri May 10 2024 Dave Dykstra <dwd@fnal.gov> 3.0-1
+- Switch to supporting pcs/pacemaker instead of heartbeat.
+
 * Fri Apr 12 2024 Dave Dykstra <dwd@fnal.gov> 2.35-1
 - Change pull_and_push to check for .cvmfs_last_snapshot at the top level
   instead of where cvmfs creates it, to make sure the initial push is 

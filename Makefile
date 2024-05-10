@@ -17,12 +17,8 @@ install:
 	install -D -m 555 restore-replicas $(PREFIX)/usr/share/cvmfs-hastratum1/restore-replicas
 	install -D -m 644 restore-replicas.conf.in $(PREFIX)/usr/share/cvmfs-hastratum1/restore-replicas.conf.in
 	install -D -m 555 print_osg_repos $(PREFIX)/usr/share/cvmfs-hastratum1/print-osg-repos
-	install -D -m 644 ha.cf.in $(PREFIX)/etc/ha.d/ha.cf.in
-	install -D -m 644 haresources.in $(PREFIX)/etc/ha.d/haresources.in
-	install -D -m 555 cvmfs-push-abort $(PREFIX)/etc/ha.d/resource.d/cvmfs-push-abort
-	ln -s ../../../etc/ha.d/resource.d/cvmfs-push-abort $(PREFIX)/usr/share/cvmfs-hastratum1/push-abort
-	install -D -m 555 ha-takeover $(PREFIX)/etc/ha.d/resource.d/ha-takeover
-	install -D -m 600 authkeys.in $(PREFIX)/etc/ha.d/authkeys.in
+	install -D -m 555 cvmfsha-push-abort $(PREFIX)/usr/lib/ocf/resource.d/heartbeat/cvmfsha-push-abort
+	ln -s ../../../usr/lib/ocf/resource.d/heartbeat/cvmfsha-push-abort $(PREFIX)/usr/share/cvmfs-hastratum1/push-abort
 	install -D -m 644 hastratum1.conf.in $(PREFIX)/etc/cvmfs/hastratum1.conf.in
 	install -D -m 444 hastratum1.logrotate $(PREFIX)/etc/logrotate.d/cvmfs-hastratum1
 	# ghost files
