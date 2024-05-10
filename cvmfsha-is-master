@@ -3,5 +3,13 @@
 if [ -n "$IS_HA_MASTER_CMD" ]; then
     eval "$IS_HA_MASTER_CMD"
 else
-    [ "`cl_status rscstatus 2>/dev/null`" == all ]
+    # NOTE: the pcs status command only works as root!
+    MASTER="$(pcs status 2>/dev/null| sed -n 's/.*Current DC: \([^ ]*\).*/\1/p')"
+    if [ -z "$MASTER" ]; then
+        exit 1
+    fi
+    if [ "$MASTER" = "$(uname -n)" ]; then
+        exit 0
+    fi
+    exit 1
 fi

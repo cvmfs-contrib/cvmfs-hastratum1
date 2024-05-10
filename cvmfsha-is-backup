@@ -2,6 +2,8 @@
 . /etc/cvmfs/hastratum1.conf
 if [ -n "$IS_HA_BACKUP_CMD" ]; then
     eval "$IS_HA_BACKUP_CMD"
+elif ${0%/*}/cvmfsha-is-master; then
+    exit 1
 else
-    [ "`cl_status rscstatus 2>/dev/null`" == none ]
+    exit 0
 fi
