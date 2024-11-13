@@ -44,6 +44,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+# - Add -o StrictHostKeyChecking=no to ssh command in pull_and_push.
+#   This is needed the first time a connection is made on el9 even
+#   with Kerberos.
+
 * Fri May 10 2024 Dave Dykstra <dwd@fnal.gov> 3.0-1
 - Switch to supporting pcs/pacemaker instead of heartbeat.
 
