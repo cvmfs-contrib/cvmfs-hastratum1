@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 3.0
+Version: 3.1
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,9 +44,11 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
-# - Add -o StrictHostKeyChecking=no to ssh command in pull_and_push.
-#   This is needed the first time a connection is made on el9 even
-#   with Kerberos.
+* Fri Jul 11 2025 Dave Dykstra <dwd@fnal.gov> 3.1-1
+- Add -o StrictHostKeyChecking=no to ssh command in pull_and_push.
+  This is needed the first time a connection is made on el9 even
+  with Kerberos.
+- Change cvmfsha-gc-all to just do cvmfs_server gc -a.
 
 * Fri May 10 2024 Dave Dykstra <dwd@fnal.gov> 3.0-1
 - Switch to supporting pcs/pacemaker instead of heartbeat.
