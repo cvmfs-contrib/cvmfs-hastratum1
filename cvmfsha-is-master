@@ -4,7 +4,13 @@ if [ -n "$IS_HA_MASTER_CMD" ]; then
     eval "$IS_HA_MASTER_CMD"
 else
     # NOTE: the pcs status command only works as root!
-    MASTER="$(pcs status 2>/dev/null| sed -n 's/.*Current DC: \([^ ]*\).*/\1/p')"
+    # prefer the host that has the IP address
+    STATUS="$(pcs status 2>/dev/null)"
+    MASTER="$(echo "$STATUS"| sed -n 's/.*IPaddr2.*Started \([^ ]*\).*/\1/p')"
+    if [ -z "$MASTER" ]; then
+        # otherwise if that's not configured use the one with the abort function
+        MASTER="$(echo "$STATUS"| sed -n 's/.*cvmfsha-push-abort.*Started \([^ ]*\).*/\1/p')"
+    fi
     if [ -z "$MASTER" ]; then
         exit 1
     fi
