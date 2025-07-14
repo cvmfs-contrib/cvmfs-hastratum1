@@ -1,6 +1,6 @@
 Summary: Scripts for managing a Highly Available CVMFS Stratum1 pair of machines
 Name: cvmfs-hastratum1
-Version: 3.1
+Version: 3.2
 # The release_prefix macro is used in the OBS prjconf, don't change its name
 %define release_prefix 1
 Release: %{release_prefix}%{?dist}
@@ -44,6 +44,10 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+* Mon Jul 14 2025 Dave Dykstra <dwd@fnal.gov> 3.2-1
+- Prefer the pcs node with the IPaddr2 resource in cvmfsha-is-master,
+  or otherwise the one running the cvmfsha-push-abort resource.
+
 * Fri Jul 11 2025 Dave Dykstra <dwd@fnal.gov> 3.1-1
 - Add -o StrictHostKeyChecking=no to ssh command in pull_and_push.
   This is needed the first time a connection is made on el9 even
