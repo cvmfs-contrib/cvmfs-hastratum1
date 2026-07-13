@@ -84,10 +84,12 @@ if ! $HALFONLY; then ssh $OTHERHOST rm -rf /var/spool/cvmfs/$REPO; fi
 rm -rf /var/spool/cvmfs/$REPO
 if ! $HALFONLY; then ssh $OTHERHOST rm -rf /etc/cvmfs/repositories.d/$REPO; fi
 rm -rf /etc/cvmfs/repositories.d/$REPO
+if [ -n "$SHORTREPO" ]; then
+    rm -f $STORAGE/$SHORTREPO
+fi
 if ! $HALFONLY; then
     if [ -n "$SHORTREPO" ]; then
         ssh $OTHERHOST rm -f $STORAGE/$SHORTREPO
-        rm -f $STORAGE/$SHORTREPO
     fi
     ssh $OTHERHOST rm -rf $STORAGE/$REPO
 fi

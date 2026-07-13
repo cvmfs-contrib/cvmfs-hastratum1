@@ -44,6 +44,8 @@ find /var/log/cvmfs -name '*.log-*' ! -name "*.gz" | xargs --no-run-if-empty gzi
 %ghost /var/lib/cvmfs-hastratum1/*
 
 %changelog
+# - Remove repo short name symlink when remove-repository "-h" option is used.
+
 * Mon Sep 15 2025 Dave Dykstra <dwd@fnal.gov> 3.3-1
 - Add "-f" to the "gc -a" in cvmfsha-gc-all.
 
